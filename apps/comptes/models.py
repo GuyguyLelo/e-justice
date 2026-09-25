@@ -168,6 +168,12 @@ class Utilisateur(AbstractUser):
         return (self.role in [Role.ADMIN, Role.DIRECTEUR, Role.AGENT] and 
                 hasattr(self, 'adminprison'))
 
+    def can_view_visites(self):
+        """Consultation des visites : admin central (toutes) ou personnel de prison."""
+        if self.role == Role.ADMIN_CENTRAL:
+            return True
+        return self.can_edit_visites()
+
     def get_accessible_centre(self):
         """Retourne le centre accessible par l'utilisateur (pour admins de centre)"""
         if hasattr(self, 'adminprison'):

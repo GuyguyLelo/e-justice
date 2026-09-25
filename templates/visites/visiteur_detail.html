@@ -17,7 +17,7 @@
         </div>
     </div>
     <div class="id-banner">
-        <div class="id-photo">{{ visiteur.nom|first|upper }}{{ visiteur.prenom|first|upper }}</div>
+        {% include 'visites/_photo_visiteur.html' with visiteur=visiteur css_class='id-photo' %}
         <div>
             <h1>{{ visiteur.nom }} {{ visiteur.prenom }}</h1>
             <p class="id-meta">{{ visiteur.get_type_visiteur_display }} · {{ visiteur.relation_detenu }}</p>

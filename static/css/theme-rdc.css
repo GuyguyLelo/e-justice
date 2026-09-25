@@ -301,6 +301,7 @@
     font-size: 1.4rem;
     font-weight: 700;
 }
+img.id-photo { padding: 0; }
 .id-banner h1 {
     margin: 0 0 0.15rem;
     font-size: 1.25rem;

@@ -4,422 +4,286 @@
 
 {% block extra_css %}
 <style>
-    .stats-card {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        color: white;
-        border-radius: 0.75rem;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s ease;
+    .dash-prison.list-wrap { padding: 0.95rem 1.15rem 1.35rem; }
+    .dash-prison .list-head { margin-bottom: 0.85rem; gap: 0.9rem; }
+    .dash-prison .list-head h2 { font-size: 1.4rem; }
+    .dash-prison .list-head .btn {
+        font-size: 0.82rem;
+        padding: 0.38rem 0.8rem;
     }
-    
-    .stats-card:hover {
-        transform: translateY(-2px);
-    }
-    
-    .stats-card h4 {
-        font-size: 1.75rem;
-        font-weight: bold;
-        margin-bottom: 0.25rem;
-    }
-    
-    .stats-card p {
-        margin-bottom: 0;
-        opacity: 0.9;
-        font-size: 0.9rem;
-    }
-    
-    .stats-card .icon {
-        font-size: 2rem;
-        opacity: 0.3;
-        position: absolute;
-        right: 0.75rem;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-    
-    .welcome-card {
-        background: linear-gradient(135deg, var(--success-color), #2ecc71);
-        color: white;
-        border-radius: 0.75rem;
-        padding: 1.25rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
-    }
-    
-    .welcome-card h2 {
-        font-size: 1.5rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .welcome-card p {
-        margin-bottom: 0;
-        opacity: 0.9;
-    }
-    
-    .quick-actions {
-        background: white;
-        border-radius: 0.75rem;
-        padding: 1.25rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
-    }
-    
-    .quick-actions h3 {
-        font-size: 1.25rem;
-        margin-bottom: 1rem;
-        color: var(--primary-color);
-    }
-    
-    .action-btn {
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 0.5rem;
-        padding: 0.75rem 1rem;
-        margin: 0.25rem;
-        text-decoration: none;
-        display: inline-block;
-        transition: all 0.2s ease;
-        font-size: 0.9rem;
-    }
-    
-    .action-btn:hover {
-        background: var(--secondary-color);
-        color: white;
-        transform: translateY(-1px);
-        text-decoration: none;
-    }
-    
-    .recent-activity {
-        background: white;
-        border-radius: 0.75rem;
-        padding: 1.25rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
-    }
-    
-    .recent-activity h3 {
-        font-size: 1.25rem;
-        margin-bottom: 1rem;
-        color: var(--primary-color);
-    }
-    
-    .activity-item {
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        align-items: center;
-    }
-    
-    .activity-item:last-child {
-        border-bottom: none;
-    }
-    
-    .activity-icon {
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 50%;
+    .dash-prison .stat-chip strong {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 0.75rem;
-        font-size: 1rem;
+        gap: 0.35rem;
+        font-size: 1.55rem;
+        line-height: 1.2;
+        font-weight: 700;
     }
-    
-    .activity-content {
-        flex: 1;
+    .dash-prison .stat-chip span { font-size: 0.8rem; }
+    .dash-prison .stats-strip {
+        gap: 0.65rem;
+        margin-bottom: 0.85rem;
     }
-    
-    .activity-content h6 {
-        margin-bottom: 0.25rem;
-        font-size: 0.9rem;
+    .dash-prison .stat-chip { padding: 0.7rem 0.5rem; }
+    a.stat-chip,
+    a.stat-chip:link,
+    a.stat-chip:visited,
+    a.stat-chip:hover,
+    a.stat-chip:focus {
+        text-decoration: none;
+        color: #fff;
+        display: block;
     }
-    
-    .activity-content p {
-        margin-bottom: 0;
-        font-size: 0.8rem;
-        color: #666;
-    }
-    
-    .activity-time {
-        font-size: 0.75rem;
-        color: #999;
-    }
-    
-    .compact-grid {
+    a.stat-chip strong,
+    a.stat-chip span,
+    a.stat-chip i { color: #fff; }
+    a.stat-chip.tr strong,
+    a.stat-chip.tr span,
+    a.stat-chip.tr i { color: #12263a; }
+    a.stat-chip:hover { filter: brightness(1.1); color: #fff; }
+    .status-libere { background: #1b7a3d; color: #fff; }
+    .status-evade { background: #ce1020; color: #fff; }
+    .dash-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.5rem;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
     }
-    
-    .compact-card {
-        background: white;
-        border-radius: 0.75rem;
-        padding: 1rem;
-        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s ease;
-    }
-    
-    .compact-card:hover {
-        transform: translateY(-2px);
-    }
-    
-    .compact-card h5 {
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
-        color: var(--primary-color);
-    }
-    
-    .compact-card p {
-        margin-bottom: 0;
-        font-size: 0.9rem;
-        color: #666;
-    }
-    
-    .status-badge {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 500;
-        margin: 0.125rem;
-    }
-    
-    .status-programmee { background: #fff3cd; color: #856404; }
-    .status-en-cours { background: #d1ecf1; color: #0c5460; }
-    .status-terminee { background: #d4edda; color: #155724; }
-    .status-annulee { background: #f8d7da; color: #721c24; }
-    
-    .metric-value {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--primary-color);
-    }
-    
-    .metric-label {
-        font-size: 0.8rem;
-        color: #666;
+    .panel-box { background: #fff; border: 1px solid #d5dee8; }
+    .panel-box h3 {
+        margin: 0;
+        padding: 0.55rem 0.75rem;
+        background: #0066c7;
+        color: #fff;
+        font-size: 0.78rem;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.04em;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .panel-box h3 a {
+        color: #fff;
+        font-size: 0.72rem;
+        text-decoration: none;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+    .panel-box h3 a:hover { text-decoration: underline; }
+    .dash-prison .data-table { font-size: 0.88rem; }
+    .dash-prison .data-table tbody td { padding: 0.45rem 0.75rem; }
+    .dash-prison .data-table .mat { font-size: 0.78rem; }
+    .cap-bar {
+        height: 10px;
+        background: #e8eef4;
+        margin: 0.5rem 0 0.25rem;
+    }
+    .cap-bar > span { display: block; height: 100%; background: #0066c7; }
+    .cap-bar.high > span { background: #ce1020; }
+    .cap-bar.mid > span { background: #c9a227; }
+    .dash-prison .id-banner {
+        padding: 0.95rem 1.1rem;
+        margin-bottom: 0.9rem;
+        gap: 1rem;
+    }
+    .dash-prison .id-photo {
+        width: 108px;
+        height: 80px;
+        font-size: 1.05rem;
+    }
+    .dash-prison .id-banner h1 { font-size: 1.4rem; }
+    .dash-prison .id-meta { font-size: 0.88rem; margin-top: 0.15rem; }
+    .id-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    @media (max-width: 992px) {
+        .dash-grid { grid-template-columns: 1fr; }
+        .dash-prison .id-banner { grid-template-columns: 108px 1fr; }
+        .dash-prison .stats-strip.cols-5,
+        .stats-strip.cols-3,
+        .stats-strip.cols-4 { grid-template-columns: repeat(2, 1fr); }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- En-tête compact -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="welcome-card">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h2>Bienvenue, {{ user.get_full_name|default:user.username }} !</h2>
-                        <p>Tableau de bord du système e-Detenu - {{ "now"|date:"d/m/Y" }}</p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <div class="d-flex justify-content-end">
-                            <div class="me-3">
-                                <div class="metric-value">{{ "now"|date:"H:i" }}</div>
-                                <div class="metric-label">Heure actuelle</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<div class="list-wrap dash-prison">
+    <div class="list-head">
+        <h2>
+            <i class="bi bi-building"></i>
+            {% if centre %}{{ centre.nom }}{% else %}Tableau de bord{% endif %}
+        </h2>
+        <div class="d-flex gap-2 flex-wrap">
+            {% if centre %}
+            <a href="{% url 'centre_dashboard' centre.id %}" class="btn btn-outline-secondary"><i class="bi bi-card-text"></i> Fiche centre</a>
+            {% endif %}
+            {% if request.user.can_edit_detenus %}
+            <a href="{% url 'detenu_create' %}" class="btn btn-primary"><i class="bi bi-person-plus"></i> Nouveau détenu</a>
+            {% endif %}
+            {% if request.user.can_edit_visites %}
+            <a href="{% url 'visite_create' %}" class="btn btn-outline-primary"><i class="bi bi-calendar-plus"></i> Nouvelle visite</a>
+            {% endif %}
+            {% if centre %}
+            <a href="{% url 'generer_liste_detenus_centre' centre.id %}" class="btn btn-outline-warning"><i class="bi bi-file-pdf"></i> PDF</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if centre %}
+    <div class="id-banner">
+        {% if centre.photo_couverture %}
+        <div class="id-photo"><img src="{{ centre.photo_couverture.url }}" alt="{{ centre.nom }}"></div>
+        {% else %}
+        <div class="id-photo">{{ centre.code|slice:":2"|upper }}</div>
+        {% endif %}
+        <div>
+            <h1>{{ centre.nom }}</h1>
+            <p class="id-meta">{{ centre.code }} · {{ centre.get_type_centre_display }}</p>
+            <p class="id-meta">{{ centre.ville|default:"—" }}{% if centre.province %} · {{ centre.province }}{% endif %} · {{ user.get_full_name|default:user.username }}</p>
+        </div>
+        <div class="id-status">
+            <span class="status-badge {% if centre.statut %}status-libere{% else %}status-evade{% endif %}">{% if centre.statut %}Actif{% else %}Inactif{% endif %}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="stats-strip cols-5">
+        <a class="stat-chip" href="{% url 'detenus_list' %}">
+            <strong><i class="bi bi-people"></i> {{ total_detenus|default:0 }}</strong><span>Détenus</span>
+        </a>
+        <a class="stat-chip inc" href="{% url 'detenus_list' %}?statut=INCARCERE">
+            <strong><i class="bi bi-lock-fill"></i> {{ detenus_incarceres|default:0 }}</strong><span>Incarcérés</span>
+        </a>
+        <a class="stat-chip inc" href="{% url 'detenus_list' %}?statut=INCARCERE&sexe=M">
+            <strong><i class="bi bi-gender-male"></i> {{ hommes_incarceres|default:0 }}</strong><span>Hommes incarcérés</span>
+        </a>
+        <a class="stat-chip inc" href="{% url 'detenus_list' %}?statut=INCARCERE&sexe=F">
+            <strong><i class="bi bi-gender-female"></i> {{ femmes_incarceres|default:0 }}</strong><span>Femmes incarcérées</span>
+        </a>
+        <div class="stat-chip {% if taux_occupation > 80 %}inc{% elif taux_occupation > 60 %}tr{% else %}lib{% endif %}">
+            <strong><i class="bi bi-pie-chart-fill"></i> {{ taux_occupation|default:0|floatformat:0 }} %</strong><span>Occupation</span>
+        </div>
+    </div>
+    <div class="stats-strip cols-5">
+        <div class="stat-chip lib">
+            <strong><i class="bi bi-door-open"></i> {{ places_disponibles|default:0 }}</strong><span>Places libres</span>
+        </div>
+        <a class="stat-chip" href="{% url 'visites_list' %}?date=today">
+            <strong><i class="bi bi-calendar-check"></i> {{ visites_aujourd_hui|default:0 }}</strong><span>Visites aujourd'hui</span>
+        </a>
+        <a class="stat-chip inc" href="{% url 'visites_list' %}?date=all&statut=EN_COURS">
+            <strong><i class="bi bi-hourglass-split"></i> {{ visites_en_cours|default:0 }}</strong><span>En cours</span>
+        </a>
+        <a class="stat-chip tr" href="{% url 'visites_list' %}?date=all&statut=PROGRAMMEE">
+            <strong><i class="bi bi-clock"></i> {{ visites_programmees|default:0 }}</strong><span>Programmées</span>
+        </a>
+        <a class="stat-chip ev" href="{% url 'personnel_list' %}">
+            <strong><i class="bi bi-person-badge"></i> {{ personnel_actif|default:0 }}</strong><span>Personnel actif</span>
+        </a>
+    </div>
+
+    <div class="dash-grid">
+        <div class="panel-box">
+            <h3>Capacité du centre</h3>
+            <div class="data-table-wrap" style="border:none;">
+                <table class="table data-table">
+                    <tbody>
+                        <tr><td><div class="name">Maximale</div></td><td class="name">{{ capacite_max|default:"—" }}</td></tr>
+                        <tr><td><div class="name">Occupation actuelle</div></td><td class="name">{{ capacite_actuelle|default:0 }}</td></tr>
+                        <tr><td><div class="name">Places libres</div></td><td class="name">{{ places_disponibles|default:0 }}</td></tr>
+                        <tr>
+                            <td colspan="2">
+                                <div class="cap-bar {% if taux_occupation > 80 %}high{% elif taux_occupation > 60 %}mid{% endif %}">
+                                    <span style="width: {{ taux_occupation|default:0 }}%"></span>
+                                </div>
+                                <div class="mat">Taux d'occupation {{ taux_occupation|default:0|floatformat:1 }} %</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel-box">
+            <h3>Situation des détenus</h3>
+            <div class="data-table-wrap" style="border:none;">
+                <table class="table data-table">
+                    <tbody>
+                        <tr><td><div class="name">Libérés</div></td><td class="name">{{ detenus_liberes|default:0 }}</td></tr>
+                        <tr><td><div class="name">Transférés</div></td><td class="name">{{ detenus_transferes|default:0 }}</td></tr>
+                        <tr><td><div class="name">Évadés</div></td><td class="name">{{ detenus_evades|default:0 }}</td></tr>
+                        <tr><td><div class="name">Décédés</div></td><td class="name">{{ detenus_decedes|default:0 }}</td></tr>
+                        <tr><td><div class="name">Visites cette semaine</div></td><td class="name">{{ visites_semaine|default:0 }}</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Statistiques principales -->
-    <div class="row mb-3">
-        <div class="col-lg-3 col-md-6">
-            <div class="stats-card position-relative">
-                <div class="icon">
-                    <i class="bi bi-people"></i>
-                </div>
-                <h4>{{ total_detenus|default:0 }}</h4>
-                <p>Détenus incarcérés</p>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="stats-card position-relative">
-                <div class="icon">
-                    <i class="bi bi-calendar-check"></i>
-                </div>
-                <h4>{{ visites_aujourd_hui|default:0 }}</h4>
-                <p>Visites aujourd'hui</p>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="stats-card position-relative" style="background: linear-gradient(135deg, #6f42c1, #5a2d91);">
-                <div class="icon">
-                    <i class="bi bi-gender-male"></i>
-                </div>
-                <h4>{{ total_hommes|default:0 }}</h4>
-                <p>👦 Total Hommes</p>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="stats-card position-relative" style="background: linear-gradient(135deg, #e83e8c, #c82333);">
-                <div class="icon">
-                    <i class="bi bi-gender-female"></i>
-                </div>
-                <h4>{{ total_femmes|default:0 }}</h4>
-                <p>👧 Total Femmes</p>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="stats-card position-relative">
-                <div class="icon">
-                    <i class="bi bi-person-badge"></i>
-                </div>
-                <h4>{{ total_personnel|default:0 }}</h4>
-                <p>Personnel actif</p>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="stats-card position-relative">
-                <div class="icon">
-                    <i class="bi bi-shield-check"></i>
-                </div>
-                <h4>{{ visites_en_cours|default:0 }}</h4>
-                <p>Visites en cours</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Actions rapides -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="quick-actions">
-                <h3><i class="bi bi-lightning"></i> Actions rapides</h3>
-                <div class="d-flex flex-wrap">
-                    <a href="{% url 'detenu_create' %}" class="action-btn">
-                        <i class="bi bi-person-plus"></i> Nouveau détenu
-                    </a>
-                    <a href="{% url 'visite_create' %}" class="action-btn">
-                        <i class="bi bi-calendar-plus"></i> Nouvelle visite
-                    </a>
-                    <a href="{% url 'personnel_create' %}" class="action-btn">
-                        <i class="bi bi-person-badge"></i> Nouveau personnel
-                    </a>
-                    <a href="{% url 'visiteurs_list' %}" class="action-btn">
-                        <i class="bi bi-people"></i> Gérer visiteurs
-                    </a>
-                    <a href="{% url 'detenus_list' %}" class="action-btn">
-                        <i class="bi bi-list"></i> Liste détenus
-                    </a>
-                    <a href="{% url 'visites_list' %}" class="action-btn">
-                        <i class="bi bi-calendar3"></i> Liste visites
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Contenu principal -->
-    <div class="row">
-        <!-- Activité récente -->
-        <div class="col-lg-8">
-            <div class="recent-activity">
-                <h3><i class="bi bi-clock-history"></i> Activité récente</h3>
-                
-                <!-- Visites récentes -->
-                {% if visites_recentes %}
-                <div class="mb-3">
-                    <h6 class="text-primary">Visites récentes</h6>
-                    {% for visite in visites_recentes|slice:":5" %}
-                    <div class="activity-item">
-                        <div class="activity-icon bg-primary text-white">
-                            <i class="bi bi-calendar-check"></i>
-                        </div>
-                        <div class="activity-content">
-                            <h6>{{ visite.visiteur.nom_complet }} → {{ visite.detenu.nom_complet }}</h6>
-                            <p>{{ visite.date_visite|date:"d/m/Y H:i" }} - {{ visite.duree_minutes }} min</p>
-                        </div>
-                        <div class="activity-time">
-                            {% if visite.statut == 'PROGRAMMEE' %}
-                                <span class="status-badge status-programmee">Programmée</span>
-                            {% elif visite.statut == 'EN_COURS' %}
-                                <span class="status-badge status-en-cours">En cours</span>
-                            {% elif visite.statut == 'TERMINEE' %}
-                                <span class="status-badge status-terminee">Terminée</span>
-                            {% elif visite.statut == 'ANNULEE' %}
-                                <span class="status-badge status-annulee">Annulée</span>
-                            {% endif %}
-                        </div>
-                    </div>
+    <div class="dash-grid">
+        <div class="panel-box">
+            <h3>
+                Visites récentes
+                <a href="{% url 'visites_list' %}?date=all">Toutes</a>
+            </h3>
+            <div class="data-table-wrap" style="border:none;">
+                <table class="table data-table">
+                    <tbody>
+                    {% for visite in visites_recentes %}
+                    <tr>
+                        <td>
+                            <div class="name">{{ visite.visiteur.nom_complet }}</div>
+                            <div class="mat">{{ visite.detenu.nom_complet }} · {{ visite.date_visite|date:"d/m/Y H:i" }}</div>
+                        </td>
+                        <td>
+                            <span class="status-badge text-white
+                                {% if visite.statut == 'PROGRAMMEE' %}bg-warning
+                                {% elif visite.statut == 'EN_COURS' %}bg-primary
+                                {% elif visite.statut == 'TERMINEE' %}bg-success
+                                {% elif visite.statut == 'ANNULEE' %}bg-secondary
+                                {% elif visite.statut == 'REFUSEE' %}bg-danger
+                                {% endif %}">{{ visite.get_statut_display }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td class="empty-state">Aucune visite récente.</td></tr>
                     {% endfor %}
-                </div>
-                {% endif %}
-
-                <!-- Détenus récents -->
-                {% if detenus_recents %}
-                <div class="mb-3">
-                    <h6 class="text-primary">Détenus récents</h6>
-                    {% for detenu in detenus_recents|slice:":5" %}
-                    <div class="activity-item">
-                        <div class="activity-icon bg-secondary text-white">
-                            <i class="bi bi-person"></i>
-                        </div>
-                        <div class="activity-content">
-                            <h6>{{ detenu.nom_complet }}</h6>
-                            <p>Matricule: {{ detenu.matricule }} - Cellule: {{ detenu.cellule }}</p>
-                        </div>
-                        <div class="activity-time">
-                            {{ detenu.created_at|date:"d/m/Y" }}
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
+                    </tbody>
+                </table>
             </div>
         </div>
-
-        <!-- Informations secondaires -->
-        <div class="col-lg-4">
-            <!-- Statistiques rapides -->
-            <div class="compact-grid">
-                <div class="compact-card">
-                    <h5><i class="bi bi-calendar-week"></i> Cette semaine</h5>
-                    <p>{{ visites_semaine|default:0 }} visites programmées</p>
-                </div>
-                <div class="compact-card">
-                    <h5><i class="bi bi-clock"></i> En attente</h5>
-                    <p>{{ visites_attente|default:0 }} visites en attente</p>
-                </div>
-                <div class="compact-card">
-                    <h5><i class="bi bi-shield-exclamation"></i> Alertes</h5>
-                    <p>{{ alertes|default:0 }} alertes actives</p>
-                </div>
-                <div class="compact-card">
-                    <h5><i class="bi bi-graph-up"></i> Performance</h5>
-                    <p>{{ performance|default:"N/A" }}% efficacité</p>
-                </div>
-            </div>
-
-            <!-- Liens rapides -->
-            <div class="compact-card">
-                <h5><i class="bi bi-link-45deg"></i> Liens rapides</h5>
-                <div class="d-grid gap-2">
-                    <a href="{% url 'detenus_list' %}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-list"></i> Liste des détenus
-                    </a>
-                    <a href="{% url 'visites_list' %}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-calendar3"></i> Liste des visites
-                    </a>
-                    <a href="{% url 'personnel_list' %}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-people"></i> Personnel
-                    </a>
-                    <a href="{% url 'visiteurs_list' %}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-person-check"></i> Visiteurs
-                    </a>
-                </div>
+        <div class="panel-box">
+            <h3>
+                Derniers détenus
+                <a href="{% url 'detenus_list' %}">Liste</a>
+            </h3>
+            <div class="data-table-wrap" style="border:none;">
+                <table class="table data-table">
+                    <tbody>
+                    {% for detenu in detenus_recents %}
+                    <tr>
+                        <td>
+                            <div class="name">{{ detenu.nom }} {{ detenu.prenom }}</div>
+                            <div class="mat">{{ detenu.matricule }}{% if detenu.cellule %} · {{ detenu.cellule }}{% endif %}</div>
+                        </td>
+                        <td>
+                            <span class="status-badge text-white
+                                {% if detenu.statut == 'INCARCERE' %}bg-danger
+                                {% elif detenu.statut == 'LIBERE' %}bg-success
+                                {% elif detenu.statut == 'TRANSFERE' %}bg-warning
+                                {% else %}bg-secondary{% endif %}">{{ detenu.get_statut_display }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td class="empty-state">Aucun détenu.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-

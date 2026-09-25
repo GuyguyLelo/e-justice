@@ -4,22 +4,68 @@
     <meta charset="utf-8">
     <title>Liste des detenus - {{ centre.nom }}</title>
     <style>
-        @page { size: A4; margin: 1.2cm; }
+        @page {
+            size: A4;
+            margin: 2.4cm 1.2cm 1.6cm 1.2cm;
+            @frame header_frame {
+                -pdf-frame-content: page-header;
+                left: 1.2cm;
+                right: 1.2cm;
+                top: 0.45cm;
+                height: 1.75cm;
+            }
+            @frame footer_frame {
+                -pdf-frame-content: page-footer;
+                left: 1.2cm;
+                right: 1.2cm;
+                bottom: 0.35cm;
+                height: 0.9cm;
+            }
+        }
         body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #12263a; }
-        h1 { font-size: 15px; text-align: center; margin: 0; color: #004a94; }
-        h2 { font-size: 12px; text-align: center; margin: 4px 0 2px 0; }
+        #page-header {
+            border-bottom: 3px solid #f7d116;
+            padding-bottom: 4px;
+        }
+        .gov { font-size: 8px; text-transform: uppercase; letter-spacing: 0.08em; color: #004a94; text-align: center; }
+        .min { font-size: 9px; font-weight: bold; color: #003366; text-align: center; margin-top: 1px; }
+        .app { font-size: 8px; color: #5b6b7c; text-align: center; }
+        h1 { font-size: 15px; text-align: center; margin: 8px 0 2px 0; color: #004a94; text-transform: uppercase; }
+        h2 { font-size: 12px; text-align: center; margin: 2px 0; }
         .sub { text-align: center; font-size: 8px; color: #5b6b7c; margin-bottom: 10px; }
-        table { width: 100%; }
-        th { background-color: #0066c7; color: #fff; font-size: 8px; text-align: left; padding: 4px; }
-        td { border-bottom: 1px solid #d5dee8; padding: 4px; font-size: 9px; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { display: table-header-group; }
+        th {
+            background-color: #0066c7;
+            color: #ffffff;
+            font-size: 8px;
+            font-weight: bold;
+            text-align: left;
+            text-transform: uppercase;
+            padding: 5px 4px;
+            border: 1px solid #004a94;
+        }
+        td { border: 1px solid #d5dee8; padding: 4px; font-size: 9px; }
         .stat td { text-align: center; border: 1px solid #d5dee8; padding: 6px; }
         .stat .n { font-size: 14px; font-weight: bold; color: #004a94; }
         .stat .l { font-size: 8px; color: #5b6b7c; text-transform: uppercase; }
-        .footer { margin-top: 14px; font-size: 8px; color: #5b6b7c; text-align: center; }
+        #page-footer {
+            border-top: 1px solid #d5dee8;
+            padding-top: 3px;
+            font-size: 7px;
+            color: #5b6b7c;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <h1>LISTE DES DETENUS</h1>
+    <div id="page-header">
+        <div class="gov">Republique Democratique du Congo</div>
+        <div class="min">Ministere de la Justice · Administration penitentiaire</div>
+        <div class="app">e-Justice · e-Detenu · {{ centre.nom }} ({{ centre.code }})</div>
+    </div>
+
+    <h1>Liste des detenus</h1>
     <h2>{{ centre.nom }} ({{ centre.code }})</h2>
     <p class="sub">Genere le {{ date_generation|date:"d/m/Y H:i" }} par {{ admin.utilisateur.get_full_name }}</p>
 
@@ -35,7 +81,7 @@
     </table>
     <br/>
 
-    <table>
+    <table repeat="1">
         <thead>
             <tr>
                 <th>Matricule</th>
@@ -68,8 +114,9 @@
         </tbody>
     </table>
 
-    <div class="footer">
-        {{ centre.nom }} ({{ centre.code }}) · {{ centre.adresse }} · {{ centre.telephone }}
+    <div id="page-footer">
+        {{ centre.nom }} ({{ centre.code }}) · {{ centre.adresse }} · {{ centre.telephone|default:"" }}
+        · Page <pdf:pagenumber> / <pdf:pagecount>
     </div>
 </body>
 </html>

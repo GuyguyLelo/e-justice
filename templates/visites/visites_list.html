@@ -22,18 +22,18 @@
     .stats-strip {
         display: grid;
         grid-template-columns: repeat(6, 1fr);
-        gap: 0.35rem;
-        margin-bottom: 0.55rem;
+        gap: 0.5rem;
+        margin-bottom: 0.7rem;
     }
     .stat-chip {
         background: #004a94;
         color: #fff;
         text-align: center;
-        padding: 0.28rem 0.3rem;
+        padding: 0.55rem 0.4rem;
         border-left: 3px solid #f7d116;
     }
-    .stat-chip strong { display: block; font-size: 0.95rem; line-height: 1.1; }
-    .stat-chip span { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.9; }
+    .stat-chip strong { display: block; font-size: 1.55rem; line-height: 1.15; font-weight: 700; }
+    .stat-chip span { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.9; }
     .stat-chip.inc { background: #ce1020; }
     .stat-chip.lib { background: #1b7a3d; }
     .stat-chip.tr { background: #c9a227; color: #12263a; }
@@ -73,13 +73,14 @@
     .detenus-table tbody tr:hover { background: #f4f8fc; }
     .detenus-table .name { font-weight: 700; color: #003366; }
     .detenus-table .mat { color: #5b6b7c; font-size: 0.72rem; }
-    .photo-sm {
-        width: 32px; height: 32px;
-        background: #0066c7; color: #fff;
-        font-size: 0.65rem; font-weight: 700;
-        display: inline-flex; align-items: center; justify-content: center;
-        border: 1px solid #d5dee8;
-    }
+.photo-sm {
+    width: 32px; height: 32px;
+    background: #0066c7; color: #fff;
+    font-size: 0.65rem; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid #d5dee8;
+}
+img.photo-sm { object-fit: cover; padding: 0; }
     .status-badge {
         font-size: 0.65rem;
         padding: 0.12rem 0.4rem;
@@ -100,10 +101,13 @@
 <div class="list-wrap">
     {% csrf_token %}
     <div class="list-head">
-        <h2><i class="bi bi-calendar3"></i> Liste des visites</h2>
+        <h2><i class="bi bi-calendar3"></i> {% if centre_filtre %}Visites — {{ centre_filtre.nom }}{% else %}Liste des visites{% endif %}{% if request.user.role == 'ADMIN_CENTRAL' %} <span class="text-muted" style="font-size:0.78rem;font-weight:600;">(consultation)</span>{% endif %}</h2>
         <div>
-            <a href="{% url 'visiteurs_list' %}" class="btn btn-outline-secondary">Visiteurs</a>
+            {% if centre_filtre %}
+            <a href="{% url 'centre_dashboard' centre_filtre.id %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Centre</a>
+            {% endif %}
             {% if request.user.can_edit_visites %}
+            <a href="{% url 'visiteurs_list' %}" class="btn btn-outline-secondary">Visiteurs</a>
             <a href="{% url 'visite_create' %}" class="btn btn-primary"><i class="bi bi-plus"></i> Nouvelle</a>
             {% endif %}
         </div>
@@ -119,32 +123,47 @@
     </div>
 
     <form method="get" class="search-bar">
+        {% if request.user.role == 'ADMIN_CENTRAL' and centre_id %}
+        <input type="hidden" name="centre" value="{{ centre_id }}">
+        {% endif %}
         <div class="row g-2 align-items-center">
-            <div class="col-md-3">
+            <div class="{% if request.user.role == 'ADMIN_CENTRAL' %}col-md-4{% else %}col-md-3{% endif %}">
                 <input type="text" class="form-control" id="search" name="search"
-                       value="{{ request.GET.search }}" placeholder="Visiteur, détenu, matricule…">
+                       value="{{ request.GET.search }}" placeholder="Détenu, visiteur, matricule…">
             </div>
             <div class="col-md-2">
                 <select class="form-select" id="date" name="date" onchange="toggleDatePicker()">
+                    <option value="all" {% if date_filter == 'all' %}selected{% endif %}>Toutes les dates</option>
                     <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Aujourd'hui</option>
                     <option value="week" {% if date_filter == 'week' %}selected{% endif %}>Cette semaine</option>
                     <option value="month" {% if date_filter == 'month' %}selected{% endif %}>Ce mois</option>
-                    <option value="custom" {% if date_filter == 'custom' %}selected{% endif %}>Date</option>
-                    <option value="all" {% if date_filter == 'all' %}selected{% endif %}>Toutes</option>
+                    <option value="custom" {% if date_filter == 'custom' %}selected{% endif %}>Date précise</option>
                 </select>
             </div>
             <div class="col-md-2" id="custom-date-container" style="display:{% if date_filter == 'custom' %}block{% else %}none{% endif %};">
                 <input type="date" class="form-control" id="custom_date" name="custom_date"
-                       value="{% if custom_date %}{{ custom_date }}{% else %}{{ today }}{% endif %}">
+                       value="{% if date_filter == 'custom' and custom_date %}{{ custom_date }}{% endif %}"
+                       {% if date_filter != 'custom' %}disabled{% endif %}>
             </div>
             <div class="col-md-2">
                 <select class="form-select" id="statut" name="statut">
-                    <option value="">Statut</option>
+                    <option value="">Tous les statuts</option>
                     {% for value, label in statuts %}
                     <option value="{{ value }}" {% if request.GET.statut == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
+            {% if request.user.role == 'ADMIN_CENTRAL' and not centre_id %}
+            <div class="col-md-2">
+                <select class="form-select" name="centre">
+                    <option value="">Tous les centres</option>
+                    {% for centre in centres %}
+                    <option value="{{ centre.id }}" {% if centre_id == centre.id|stringformat:"s" %}selected{% endif %}>{{ centre.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            {% if request.user.role != 'ADMIN_CENTRAL' %}
             <div class="col-md-2">
                 <select class="form-select" id="detenu" name="detenu">
                     <option value="">Détenu</option>
@@ -153,8 +172,14 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-1">
-                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i></button>
+            {% endif %}
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary flex-grow-1">Filtrer</button>
+                {% if centre_filtre %}
+                <a href="{% url 'visites_list' %}?date=all&centre={{ centre_filtre.id }}" class="btn btn-outline-secondary">X</a>
+                {% else %}
+                <a href="{% url 'visites_list' %}" class="btn btn-outline-secondary">X</a>
+                {% endif %}
             </div>
         </div>
     </form>
@@ -166,8 +191,9 @@
                 <thead>
                     <tr>
                         <th></th>
-                        <th>Visiteur</th>
                         <th>Détenu</th>
+                        <th>Visiteur</th>
+                        {% if request.user.role == 'ADMIN_CENTRAL' %}<th>Centre</th>{% endif %}
                         <th>Date</th>
                         <th>Durée</th>
                         <th>Statut</th>
@@ -178,15 +204,26 @@
                 <tbody>
                 {% for visite in page_obj %}
                     <tr>
-                        <td><span class="photo-sm">{{ visite.visiteur.nom|first|upper }}{{ visite.visiteur.prenom|first|upper }}</span></td>
-                        <td>
-                            <div class="name">{{ visite.visiteur.nom_complet }}</div>
-                            <div class="mat">{{ visite.visiteur.get_type_visiteur_display }}</div>
-                        </td>
+                        <td><span class="photo-sm">{{ visite.detenu.nom|first|upper }}{{ visite.detenu.prenom|first|upper }}</span></td>
                         <td>
                             <div class="name">{{ visite.detenu.nom_complet }}</div>
                             <div class="mat">{{ visite.detenu.matricule }}</div>
                         </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                {% include 'visites/_photo_visiteur.html' with visiteur=visite.visiteur %}
+                                <div>
+                                    <div class="name">{{ visite.visiteur.nom_complet }}</div>
+                                    <div class="mat">{{ visite.visiteur.get_type_visiteur_display }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        {% if request.user.role == 'ADMIN_CENTRAL' %}
+                        <td>
+                            <div class="name">{{ visite.detenu.centre.nom|default:"—" }}</div>
+                            <div class="mat">{{ visite.detenu.centre.code }}</div>
+                        </td>
+                        {% endif %}
                         <td>
                             {{ visite.date_visite|date:"d/m/Y" }}
                             <div class="mat">{{ visite.date_visite|time:"H:i" }}</div>
@@ -224,13 +261,13 @@
         <nav>
             <ul class="pagination">
                 {% if page_obj.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.detenu %}&detenu={{ request.GET.detenu }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.custom_date %}&custom_date={{ request.GET.custom_date }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.detenu %}&detenu={{ request.GET.detenu }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.custom_date %}&custom_date={{ request.GET.custom_date }}{% endif %}"><i class="bi bi-chevron-left"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.detenu %}&detenu={{ request.GET.detenu }}{% endif %}{% if request.GET.centre %}&centre={{ request.GET.centre }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.custom_date %}&custom_date={{ request.GET.custom_date }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.detenu %}&detenu={{ request.GET.detenu }}{% endif %}{% if request.GET.centre %}&centre={{ request.GET.centre }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.custom_date %}&custom_date={{ request.GET.custom_date }}{% endif %}"><i class="bi bi-chevron-left"></i></a></li>
                 {% endif %}
                 <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
                 {% if page_obj.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.detenu %}&detenu={{ request.GET.detenu }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.custom_date %}&custom_date={{ request.GET.custom_date }}{% endif %}"><i class="bi bi-chevron-right"></i></a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.detenu %}&detenu={{ request.GET.detenu }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.custom_date %}&custom_date={{ request.GET.custom_date }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.detenu %}&detenu={{ request.GET.detenu }}{% endif %}{% if request.GET.centre %}&centre={{ request.GET.centre }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.custom_date %}&custom_date={{ request.GET.custom_date }}{% endif %}"><i class="bi bi-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.detenu %}&detenu={{ request.GET.detenu }}{% endif %}{% if request.GET.centre %}&centre={{ request.GET.centre }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.custom_date %}&custom_date={{ request.GET.custom_date }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -239,7 +276,9 @@
     {% else %}
     <div class="empty-state detenus-table-wrap">
         <p class="mb-2">Aucune visite correspondant aux critères.</p>
+        {% if request.user.can_edit_visites %}
         <a href="{% url 'visite_create' %}" class="btn btn-primary btn-sm">Nouvelle visite</a>
+        {% endif %}
     </div>
     {% endif %}
 </div>
@@ -250,8 +289,11 @@
 function toggleDatePicker() {
     const dateSelect = document.getElementById('date');
     const customDateContainer = document.getElementById('custom-date-container');
-    if (dateSelect && customDateContainer) {
-        customDateContainer.style.display = dateSelect.value === 'custom' ? 'block' : 'none';
+    const customDate = document.getElementById('custom_date');
+    if (dateSelect && customDateContainer && customDate) {
+        const isCustom = dateSelect.value === 'custom';
+        customDateContainer.style.display = isCustom ? 'block' : 'none';
+        customDate.disabled = !isCustom;
     }
 }
 function actionVisite(visiteId, action) {

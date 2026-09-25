@@ -11,7 +11,8 @@ class VisiteurForm(forms.ModelForm):
         model = Visiteur
         fields = [
             'nom', 'prenom', 'type_visiteur', 'piece_identite', 'numero_piece',
-            'telephone', 'adresse', 'relation_detenu', 'cabinet_avocat', 'numero_ordre_avocat'
+            'telephone', 'adresse', 'relation_detenu', 'cabinet_avocat',
+            'numero_ordre_avocat', 'photo',
         ]
         widgets = {
             'nom': forms.TextInput(attrs={
@@ -54,7 +55,21 @@ class VisiteurForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Numéro d\'ordre de l\'avocat'
             }),
+            'photo': forms.ClearableFileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*',
+            }),
         }
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        if photo and hasattr(photo, 'size'):
+            if photo.size > 5 * 1024 * 1024:
+                raise ValidationError("La photo ne doit pas dépasser 5 Mo.")
+            content_type = getattr(photo, 'content_type', '') or ''
+            if content_type and not content_type.startswith('image/'):
+                raise ValidationError("Seules les images sont acceptées.")
+        return photo
 
 
 class VisiteForm(forms.ModelForm):

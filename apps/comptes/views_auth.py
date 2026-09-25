@@ -120,54 +120,54 @@ def dashboard_view(request):
     
     # Ajouter des statistiques réelles selon les permissions
     if hasattr(user, 'adminprison'):
-        # Stats pour admin de centre - seulement son centre
-        centre = user.adminprison.centre
-        from apps.detenus.models import Detenu
+        from apps.detenus.models import Detenu, CentrePenitencier
         from apps.personnel.models import Personnel
         from apps.visites.models import Visite
-        
-        # Statistiques des détenus pour ce centre
+
+        centre = CentrePenitencier.objects.prefetch_related('photos').get(
+            pk=user.adminprison.centre_id
+        )
+        stats['centre'] = centre
+
         stats['total_detenus'] = Detenu.objects.filter(centre=centre).count()
         stats['detenus_incarceres'] = Detenu.objects.filter(centre=centre, statut='INCARCERE').count()
         stats['detenus_liberes'] = Detenu.objects.filter(centre=centre, statut='LIBERE').count()
         stats['detenus_transferes'] = Detenu.objects.filter(centre=centre, statut='TRANSFERE').count()
         stats['detenus_evades'] = Detenu.objects.filter(centre=centre, statut='EVADE').count()
         stats['detenus_decedes'] = Detenu.objects.filter(centre=centre, statut='DECEDE').count()
-        
-        # Statistiques par genre pour ce centre
+
         stats['total_hommes'] = Detenu.objects.filter(centre=centre, sexe='M').count()
         stats['total_femmes'] = Detenu.objects.filter(centre=centre, sexe='F').count()
         stats['hommes_incarceres'] = Detenu.objects.filter(centre=centre, sexe='M', statut='INCARCERE').count()
         stats['femmes_incarceres'] = Detenu.objects.filter(centre=centre, sexe='F', statut='INCARCERE').count()
-        
-        # Statistiques du personnel
-        stats['total_personnel'] = Personnel.objects.filter(statut='ACTIF').count()
-        stats['personnel_actif'] = Personnel.objects.filter(statut='ACTIF').count()
-        stats['personnel_inactif'] = Personnel.objects.filter(statut='INACTIF').count()
-        stats['personnel_conge'] = Personnel.objects.filter(statut='CONGE').count()
-        
-        # Statistiques des visites pour ce centre
-        stats['total_visites'] = Visite.objects.filter(detenu__centre=centre).count()
-        stats['visites_terminees'] = Visite.objects.filter(detenu__centre=centre, statut='TERMINEE').count()
-        stats['visites_en_cours'] = Visite.objects.filter(detenu__centre=centre, statut='EN_COURS').count()
-        stats['visites_programmees'] = Visite.objects.filter(detenu__centre=centre, statut='PROGRAMMEE').count()
-        
-        # Statistiques récentes
-        from django.utils import timezone
-        from datetime import timedelta
+
+        personnel_qs = Personnel.objects.filter(centre=centre)
+        stats['total_personnel'] = personnel_qs.count()
+        stats['personnel_actif'] = personnel_qs.filter(statut='ACTIF').count()
+        stats['personnel_inactif'] = personnel_qs.filter(statut='INACTIF').count()
+        stats['personnel_conge'] = personnel_qs.filter(statut='CONGE').count()
+
+        visites_qs = Visite.objects.filter(detenu__centre=centre)
+        stats['total_visites'] = visites_qs.count()
+        stats['visites_terminees'] = visites_qs.filter(statut='TERMINEE').count()
+        stats['visites_en_cours'] = visites_qs.filter(statut='EN_COURS').count()
+        stats['visites_programmees'] = visites_qs.filter(statut='PROGRAMMEE').count()
+        stats['visites_attente'] = stats['visites_programmees']
+
         aujourd_hui = timezone.now().date()
         debut_semaine = aujourd_hui - timedelta(days=7)
-        
-        stats['visites_aujourd_hui'] = Visite.objects.filter(detenu__centre=centre, date_visite__date=aujourd_hui).count()
-        stats['visites_semaine'] = Visite.objects.filter(detenu__centre=centre, date_visite__date__gte=debut_semaine).count()
-        
-        # Activité récente pour ce centre
-        stats['visites_recentes'] = Visite.objects.filter(detenu__centre=centre).select_related('visiteur', 'detenu').order_by('-date_visite')[:10]
-        stats['detenus_recents'] = Detenu.objects.filter(centre=centre).order_by('-created_at')[:5]
-        
-        # Calcul de taux d'occupation
-        centre_capacity = centre.capacite_maximale if hasattr(centre, 'capacite_maximale') and centre.capacite_maximale else 100
-        stats['taux_occupation'] = round((stats['detenus_incarceres'] / centre_capacity) * 100, 1) if centre_capacity > 0 else 0
+        stats['visites_aujourd_hui'] = visites_qs.filter(date_visite__date=aujourd_hui).count()
+        stats['visites_semaine'] = visites_qs.filter(date_visite__date__gte=debut_semaine).count()
+
+        stats['visites_recentes'] = visites_qs.select_related(
+            'visiteur', 'detenu'
+        ).order_by('-date_visite')[:8]
+        stats['detenus_recents'] = Detenu.objects.filter(centre=centre).order_by('-created_at')[:8]
+
+        stats['capacite_max'] = centre.capacite_max
+        stats['capacite_actuelle'] = centre.capacite_actuelle
+        stats['places_disponibles'] = centre.places_disponibles
+        stats['taux_occupation'] = centre.taux_occupation
         
     elif user.role in ['ADMIN', 'DIRECTEUR']:
         from apps.detenus.models import Detenu, CentrePenitencier

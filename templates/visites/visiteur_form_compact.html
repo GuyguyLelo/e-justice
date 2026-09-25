@@ -244,6 +244,34 @@
         color: #6c757d;
         margin-top: 0.25rem;
     }
+    .photo-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
+    .photo-actions .btn { border-radius: 0.5rem; font-size: 0.85rem; }
+    .camera-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .camera-modal.show { display: flex; }
+    .camera-container {
+        background: #fff;
+        padding: 1.25rem;
+        max-width: 520px;
+        width: 92%;
+        text-align: center;
+        border-radius: 0.75rem;
+    }
+    .camera-container h5 { color: #003366; margin-bottom: 0.75rem; }
+    .camera-video {
+        width: 100%;
+        max-width: 400px;
+        background: #12263a;
+        border-radius: 0.5rem;
+    }
+    .camera-controls { display: flex; justify-content: center; gap: 0.6rem; margin-top: 0.85rem; }
     
     .floating-label-group {
         position: relative;
@@ -332,7 +360,7 @@
                     <div class="progress-step">3</div>
                 </div>
                 
-                <form method="post" id="visiteurForm" novalidate>
+                <form method="post" id="visiteurForm" novalidate enctype="multipart/form-data">
                     {% csrf_token %}
                     
                     <!-- Informations personnelles -->
@@ -464,6 +492,44 @@
                         {% endif %}
                     </div>
                     
+                    <div class="section-divider"></div>
+
+                    <div class="section-title">
+                        <i class="bi bi-camera"></i> Photo du visiteur
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        {% if visiteur and visiteur.photo %}
+                        <img src="{{ visiteur.photo.url }}" alt="" id="visiteur-photo-actuelle" style="width:88px;height:110px;object-fit:cover;border:1px solid #d5dee8;margin-bottom:0.5rem;">
+                        {% endif %}
+                        {{ form.photo }}
+                        <div id="visiteur-photo-preview"></div>
+                        {% if form.photo.errors %}
+                        <div class="invalid-feedback d-block">{{ form.photo.errors.0 }}</div>
+                        {% endif %}
+                        <div class="photo-actions">
+                            <button type="button" class="btn btn-primary" id="btnOpenCamera">
+                                <i class="bi bi-camera-fill"></i> Prendre une photo
+                            </button>
+                        </div>
+                        <small class="form-help">Webcam ou fichier JPG/PNG/WebP — 5 Mo max.</small>
+                    </div>
+
+                    <div class="camera-modal" id="cameraModal">
+                        <div class="camera-container">
+                            <h5>Photo du visiteur</h5>
+                            <video id="cameraVideo" class="camera-video" autoplay playsinline></video>
+                            <canvas id="cameraCanvas" style="display:none;"></canvas>
+                            <div class="camera-controls">
+                                <button type="button" class="btn btn-success" id="btnCapturePhoto">
+                                    <i class="bi bi-camera-fill"></i> Capturer
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="btnCloseCamera">
+                                    <i class="bi bi-x-circle"></i> Fermer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Actions du formulaire -->
                     <div class="form-actions">
                         <button type="submit" class="btn btn-submit">
@@ -555,6 +621,83 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    const photoInput = document.getElementById('id_photo');
+    const photoPreview = document.getElementById('visiteur-photo-preview');
+    const photoActuelle = document.getElementById('visiteur-photo-actuelle');
+    function showPhotoPreview(url) {
+        if (!photoPreview) return;
+        photoPreview.innerHTML = '<img src="' + url + '" alt="" style="width:88px;height:110px;object-fit:cover;border:1px solid #d5dee8;margin-top:0.5rem;">';
+        if (photoActuelle) photoActuelle.style.display = 'none';
+    }
+    if (photoInput && photoPreview) {
+        photoInput.addEventListener('change', function() {
+            const file = this.files && this.files[0];
+            if (!file || !file.type.startsWith('image/')) return;
+            showPhotoPreview(URL.createObjectURL(file));
+        });
+    }
+
+    const cameraModal = document.getElementById('cameraModal');
+    const cameraVideo = document.getElementById('cameraVideo');
+    const cameraCanvas = document.getElementById('cameraCanvas');
+    const btnOpenCamera = document.getElementById('btnOpenCamera');
+    const btnCapturePhoto = document.getElementById('btnCapturePhoto');
+    const btnCloseCamera = document.getElementById('btnCloseCamera');
+    let cameraStream = null;
+
+    function closeCamera() {
+        if (cameraModal) cameraModal.classList.remove('show');
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(function(track) { track.stop(); });
+            cameraStream = null;
+        }
+        if (cameraVideo) cameraVideo.srcObject = null;
+    }
+
+    function openCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('La webcam n\'est pas disponible sur ce navigateur.');
+            return;
+        }
+        cameraModal.classList.add('show');
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } })
+            .then(function(stream) {
+                cameraStream = stream;
+                cameraVideo.srcObject = stream;
+            })
+            .catch(function() {
+                alert('Impossible d\'accéder à la webcam. Vérifiez les autorisations du navigateur.');
+                closeCamera();
+            });
+    }
+
+    if (btnOpenCamera) btnOpenCamera.addEventListener('click', openCamera);
+    if (btnCloseCamera) btnCloseCamera.addEventListener('click', closeCamera);
+    if (cameraModal) {
+        cameraModal.addEventListener('click', function(e) {
+            if (e.target === cameraModal) closeCamera();
+        });
+    }
+    if (btnCapturePhoto) {
+        btnCapturePhoto.addEventListener('click', function() {
+            if (!cameraVideo || !cameraVideo.videoWidth) return;
+            cameraCanvas.width = cameraVideo.videoWidth;
+            cameraCanvas.height = cameraVideo.videoHeight;
+            cameraCanvas.getContext('2d').drawImage(cameraVideo, 0, 0);
+            cameraCanvas.toBlob(function(blob) {
+                if (!blob || !photoInput) return;
+                const file = new File([blob], 'visiteur_' + Date.now() + '.jpg', { type: 'image/jpeg' });
+                const transfer = new DataTransfer();
+                transfer.items.add(file);
+                photoInput.files = transfer.files;
+                const clearBox = document.getElementById('photo-clear_id');
+                if (clearBox) clearBox.checked = false;
+                showPhotoPreview(URL.createObjectURL(blob));
+                closeCamera();
+            }, 'image/jpeg', 0.9);
+        });
+    }
 });
 </script>
 {% endblock %}

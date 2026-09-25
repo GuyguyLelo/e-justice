@@ -72,6 +72,14 @@ class Visiteur(models.Model):
         max_length=100,
         verbose_name=_('Relation avec le détenu')
     )
+
+    photo = models.ImageField(
+        upload_to='visiteurs/photos/',
+        blank=True,
+        null=True,
+        verbose_name=_('Photo'),
+        help_text=_('Photo d\'identité du visiteur'),
+    )
     
     # Informations professionnelles (pour avocats)
     cabinet_avocat = models.CharField(

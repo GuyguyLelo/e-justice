@@ -51,13 +51,13 @@
     .photo-gallery {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.3rem;
-        padding: 0.45rem;
+        gap: 0.4rem;
+        padding: 0.5rem;
     }
     .photo-gallery a {
         display: block;
-        width: 72px;
-        height: 54px;
+        width: 110px;
+        height: 82px;
         border: 1px solid #d5dee8;
         background: #e8eef4;
         overflow: hidden;
@@ -69,13 +69,13 @@
         object-fit: cover;
     }
     .fiche .id-banner {
-        grid-template-columns: 56px 1fr auto;
-        gap: 0.55rem;
+        grid-template-columns: 80px 1fr auto;
+        gap: 0.65rem;
     }
     .fiche .id-photo {
-        width: 56px;
-        height: 42px;
-        font-size: 0.85rem;
+        width: 80px;
+        height: 60px;
+        font-size: 0.95rem;
     }
     .id-photo img {
         width: 100%;
@@ -84,7 +84,7 @@
     }
     @media (max-width: 992px) {
         .dash-grid { grid-template-columns: 1fr; }
-        .fiche .id-banner { grid-template-columns: 56px 1fr; }
+        .fiche .id-banner { grid-template-columns: 80px 1fr; }
     }
 </style>
 {% endblock %}
@@ -99,6 +99,9 @@
             <a href="{% url 'centre_edit' centre.id %}" class="btn btn-primary"><i class="bi bi-pencil"></i> Modifier</a>
             {% endif %}
             <a href="{% url 'centre_detenus_list' centre.id %}" class="btn btn-outline-primary"><i class="bi bi-people"></i> Détenus</a>
+            {% if request.user.can_view_visites %}
+            <a href="{% url 'visites_list' %}?date=all&centre={{ centre.id }}" class="btn btn-outline-primary"><i class="bi bi-calendar3"></i> Visites</a>
+            {% endif %}
             {% if request.user.role != 'ADMIN_CENTRAL' %}
             {% if request.user.can_edit_detenus %}
             <a href="{% url 'detenu_create' %}" class="btn btn-primary"><i class="bi bi-person-plus"></i> Nouveau</a>

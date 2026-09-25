@@ -15,7 +15,7 @@ class VisiteurSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'nom', 'prenom', 'nom_complet', 'type_visiteur', 'type_visiteur_display',
             'piece_identite', 'numero_piece', 'telephone', 'adresse', 'relation_detenu',
-            'cabinet_avocat', 'numero_ordre_avocat', 'created_at', 'updated_at'
+            'cabinet_avocat', 'numero_ordre_avocat', 'photo', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -30,7 +30,7 @@ class VisiteurListSerializer(serializers.ModelSerializer):
         model = Visiteur
         fields = [
             'id', 'nom_complet', 'type_visiteur', 'type_visiteur_display',
-            'telephone', 'relation_detenu', 'created_at'
+            'telephone', 'relation_detenu', 'photo', 'created_at'
         ]
 
 

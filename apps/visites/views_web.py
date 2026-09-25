@@ -9,12 +9,16 @@ from django.views.decorators.http import require_http_methods
 from .models import Visiteur, Visite, ObjetVisite, TypeVisiteur, StatutVisite
 from .forms import VisiteurForm, VisiteForm, ObjetVisiteForm
 from apps.comptes.models import Utilisateur
-from apps.detenus.models import Detenu
+from apps.detenus.models import Detenu, CentrePenitencier
 
 
 @login_required
 def visiteurs_list_view(request):
     """Liste des visiteurs avec recherche et filtrage"""
+    if not request.user.can_view_visites():
+        messages.error(request, "Vous n'avez pas la permission de consulter les visiteurs.")
+        return redirect('dashboard')
+
     # Récupérer les paramètres de recherche
     search = request.GET.get('search', '')
     type_visiteur = request.GET.get('type_visiteur', '')
@@ -56,10 +60,18 @@ def visiteurs_list_view(request):
 @login_required
 def visiteur_detail_view(request, visiteur_id):
     """Détail d'un visiteur"""
+    if not request.user.can_view_visites():
+        messages.error(request, "Vous n'avez pas la permission de consulter les visiteurs.")
+        return redirect('dashboard')
+
     visiteur = get_object_or_404(Visiteur, id=visiteur_id)
     
-    # Visites du visiteur
-    visites = visiteur.visites.all().order_by('-date_visite')[:10]
+    visites = visiteur.visites.select_related('detenu', 'detenu__centre').order_by('-date_visite')
+    if request.user.is_admin_central():
+        pass
+    elif hasattr(request.user, 'adminprison'):
+        visites = visites.filter(detenu__centre=request.user.adminprison.centre)
+    visites = visites[:10]
     
     context = {
         'visiteur': visiteur,
@@ -76,7 +88,7 @@ def visiteur_create_view(request):
         messages.error(request, "Vous n'avez pas la permission de créer un visiteur.")
         return redirect('visiteurs_list')
     if request.method == 'POST':
-        form = VisiteurForm(request.POST)
+        form = VisiteurForm(request.POST, request.FILES)
         if form.is_valid():
             visiteur = form.save()
             messages.success(request, f'Visiteur {visiteur.nom_complet} créé avec succès.')
@@ -104,7 +116,7 @@ def visiteur_edit_view(request, visiteur_id):
         return redirect('visiteur_detail', visiteur_id=visiteur.id)
     
     if request.method == 'POST':
-        form = VisiteurForm(request.POST, instance=visiteur)
+        form = VisiteurForm(request.POST, request.FILES, instance=visiteur)
         if form.is_valid():
             visiteur = form.save()
             messages.success(request, f'Visiteur {visiteur.nom_complet} modifié avec succès.')
@@ -129,44 +141,51 @@ def visites_list_view(request):
     """Liste des visites avec recherche et filtrage"""
     from django.utils import timezone
     
-    # Récupérer les paramètres de recherche
+    user = request.user
     search = request.GET.get('search', '')
     statut = request.GET.get('statut', '')
     detenu_id = request.GET.get('detenu', '')
-    date_filter = request.GET.get('date', 'today')  # Filtre de période
-    custom_date = request.GET.get('custom_date', '')  # Date personnalisée
-    
-    # Construire la requête de base selon le rôle de l'utilisateur
-    user = request.user
-    if user.is_admin_central():
-        # L'admin central voit toutes les visites
+    centre_id = request.GET.get('centre', '')
+    custom_date = request.GET.get('custom_date', '')
+    date_filter = request.GET.get('date')
+    if not date_filter:
+        date_filter = 'all' if user.is_admin_central() else 'today'
+
+    if not user.can_view_visites():
+        visites = Visite.objects.none()
+    elif user.is_admin_central():
         visites = Visite.objects.all()
     elif hasattr(user, 'adminprison'):
-        # L'admin de centre ne voit que les visites des détenus de son centre
         visites = Visite.objects.filter(detenu__centre=user.adminprison.centre)
     else:
-        # Autres rôles ne voient rien
         visites = Visite.objects.none()
+
+    visites = visites.select_related(
+        'visiteur', 'detenu', 'detenu__centre', 'agent_controle'
+    ).order_by('-date_visite')
+
+    if centre_id and user.is_admin_central():
+        visites = visites.filter(detenu__centre_id=centre_id)
+
+    centre_filtre = None
+    if centre_id:
+        centre_filtre = CentrePenitencier.objects.filter(pk=centre_id).first()
     
-    # Trier
-    visites = visites.order_by('-date_visite')
-    
-    # Filtrer par date
-    if custom_date:
-        # Utiliser la date personnalisée
+    # Filtrer par date (la date personnalisée ne s'applique que si la période = custom)
+    if date_filter == 'custom' and custom_date:
         try:
             from datetime import datetime
             date_obj = datetime.strptime(custom_date, '%Y-%m-%d').date()
             visites = visites.filter(date_visite__date=date_obj)
         except ValueError:
-            # Si la date est invalide, utiliser aujourd'hui
             aujourd_hui = timezone.now().date()
             visites = visites.filter(date_visite__date=aujourd_hui)
     elif date_filter == 'today':
         aujourd_hui = timezone.now().date()
         visites = visites.filter(date_visite__date=aujourd_hui)
     elif date_filter == 'week':
-        debut_semaine = timezone.now().date() - timezone.timedelta(days=7)
+        from datetime import timedelta
+        debut_semaine = timezone.now().date() - timedelta(days=7)
         visites = visites.filter(date_visite__date__gte=debut_semaine)
     elif date_filter == 'month':
         debut_mois = timezone.now().date().replace(day=1)
@@ -190,6 +209,19 @@ def visites_list_view(request):
     
     if detenu_id:
         visites = visites.filter(detenu_id=detenu_id)
+
+    if user.is_admin_central():
+        detenus = Detenu.objects.all()
+        if centre_id:
+            detenus = detenus.filter(centre_id=centre_id)
+        detenus = detenus.order_by('nom', 'prenom')
+        centres = CentrePenitencier.objects.filter(statut=True).order_by('nom')
+    elif hasattr(user, 'adminprison'):
+        detenus = Detenu.objects.filter(centre=user.adminprison.centre).order_by('nom', 'prenom')
+        centres = CentrePenitencier.objects.none()
+    else:
+        detenus = Detenu.objects.none()
+        centres = CentrePenitencier.objects.none()
     
     # Pagination
     paginator = Paginator(visites, 20)  # 20 visites par page
@@ -204,7 +236,10 @@ def visites_list_view(request):
         'nb_terminees': visites.filter(statut=StatutVisite.TERMINEE).count(),
         'nb_annulees': visites.filter(statut=StatutVisite.ANNULEE).count(),
         'statuts': StatutVisite.choices,
-        'detenus': Detenu.objects.all().order_by('nom', 'prenom'),
+        'detenus': detenus,
+        'centres': centres,
+        'centre_id': centre_id,
+        'centre_filtre': centre_filtre,
         'date_filter': date_filter,
         'custom_date': custom_date,
         'search': search,
@@ -219,7 +254,19 @@ def visites_list_view(request):
 @login_required
 def visite_detail_view(request, visite_id):
     """Détail d'une visite"""
-    visite = get_object_or_404(Visite, id=visite_id)
+    user = request.user
+    if not user.can_view_visites():
+        messages.error(request, "Vous n'avez pas la permission de consulter les visites.")
+        return redirect('dashboard')
+
+    visite = get_object_or_404(
+        Visite.objects.select_related('visiteur', 'detenu', 'detenu__centre', 'agent_controle'),
+        id=visite_id,
+    )
+    if hasattr(user, 'adminprison') and not user.is_admin_central():
+        if visite.detenu.centre != user.adminprison.centre:
+            messages.error(request, "Vous n'avez pas la permission de voir cette visite.")
+            return redirect('visites_list')
     
     # Objets de la visite
     objets = visite.objets.all().order_by('nom_objet')

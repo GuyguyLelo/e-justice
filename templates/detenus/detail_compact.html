@@ -50,6 +50,15 @@
         font-size: 1.4rem;
         font-weight: 700;
     }
+    img.id-photo { padding: 0; }
+    .photo-sm {
+        width: 32px; height: 32px;
+        background: #0066c7; color: #fff;
+        font-size: 0.65rem; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center;
+        border: 1px solid #d5dee8;
+        object-fit: cover;
+    }
     .id-banner h1 {
         margin: 0 0 0.15rem;
         font-size: 1.25rem;
@@ -396,8 +405,13 @@
                                     <div class="mat">{{ visite.date_visite|time:"H:i" }}</div>
                                 </td>
                                 <td>
-                                    <div class="name">{{ visite.visiteur.nom_complet }}</div>
-                                    <div class="mat">{{ visite.visiteur.relation_detenu|default:"" }}</div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% include 'visites/_photo_visiteur.html' with visiteur=visite.visiteur %}
+                                        <div>
+                                            <div class="name">{{ visite.visiteur.nom_complet }}</div>
+                                            <div class="mat">{{ visite.visiteur.relation_detenu|default:"" }}</div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>{{ visite.visiteur.get_type_visiteur_display }}</td>
                                 <td>{{ visite.duree_minutes }} min</td>

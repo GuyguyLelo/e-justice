@@ -1,0 +1,5 @@
+{% if visiteur.photo %}
+<img src="{{ visiteur.photo.url }}" alt="{{ visiteur.nom_complet }}" class="{{ css_class|default:'photo-sm' }}">
+{% else %}
+<span class="{{ css_class|default:'photo-sm' }}">{{ visiteur.nom|first|upper }}{{ visiteur.prenom|first|upper }}</span>
+{% endif %}

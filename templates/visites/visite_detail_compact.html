@@ -23,11 +23,11 @@
         </div>
     </div>
     <div class="id-banner">
-        <div class="id-photo">{{ visite.visiteur.nom|first|upper }}{{ visite.visiteur.prenom|first|upper }}</div>
+        {% include 'visites/_photo_visiteur.html' with visiteur=visite.visiteur css_class='id-photo' %}
         <div>
             <h1>{{ visite.visiteur.nom_complet }} → {{ visite.detenu.nom_complet }}</h1>
             <p class="id-meta">{{ visite.date_visite|date:"d/m/Y" }} à {{ visite.date_visite|time:"H:i" }} · {{ visite.duree_minutes }} min</p>
-            <p class="id-meta">{{ visite.visiteur.get_type_visiteur_display }} · {{ visite.detenu.matricule }}</p>
+            <p class="id-meta">{{ visite.visiteur.get_type_visiteur_display }} · {{ visite.detenu.matricule }}{% if visite.detenu.centre %} · {{ visite.detenu.centre.nom }}{% endif %}</p>
         </div>
         <div class="id-status">
             <span class="status-badge">{{ visite.get_statut_display }}</span>

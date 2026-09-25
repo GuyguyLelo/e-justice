@@ -14,7 +14,7 @@
     }
     .list-head h2 {
         margin: 0;
-        font-size: 1.05rem;
+        font-size: 1.45rem;
         font-weight: 700;
         color: #003366;
     }
@@ -22,18 +22,18 @@
     .stats-strip {
         display: grid;
         grid-template-columns: repeat(6, 1fr);
-        gap: 0.35rem;
-        margin-bottom: 0.55rem;
+        gap: 0.5rem;
+        margin-bottom: 0.7rem;
     }
     .stat-chip {
         background: #004a94;
         color: #fff;
         text-align: center;
-        padding: 0.28rem 0.3rem;
+        padding: 0.55rem 0.4rem;
         border-left: 3px solid #f7d116;
     }
-    .stat-chip strong { display: block; font-size: 0.95rem; line-height: 1.1; }
-    .stat-chip span { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.9; }
+    .stat-chip strong { display: block; font-size: 1.55rem; line-height: 1.15; font-weight: 700; }
+    .stat-chip span { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.9; }
     .stat-chip.inc { background: #ce1020; }
     .stat-chip.lib { background: #1b7a3d; }
     .stat-chip.tr { background: #c9a227; color: #12263a; }
@@ -73,13 +73,14 @@
     .detenus-table tbody tr:hover { background: #f4f8fc; }
     .detenus-table .name { font-weight: 700; color: #003366; }
     .detenus-table .mat { color: #5b6b7c; font-size: 0.72rem; }
-    .photo-sm {
-        width: 32px; height: 32px;
-        background: #0066c7; color: #fff;
-        font-size: 0.65rem; font-weight: 700;
-        display: inline-flex; align-items: center; justify-content: center;
-        border: 1px solid #d5dee8;
-    }
+.photo-sm {
+    width: 32px; height: 32px;
+    background: #0066c7; color: #fff;
+    font-size: 0.65rem; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid #d5dee8;
+}
+img.photo-sm { object-fit: cover; padding: 0; }
     .status-badge {
         font-size: 0.65rem;
         padding: 0.12rem 0.4rem;
@@ -156,7 +157,7 @@
                 <tbody>
                 {% for visiteur in page_obj %}
                     <tr>
-                        <td><span class="photo-sm">{{ visiteur.nom|first|upper }}{{ visiteur.prenom|first|upper }}</span></td>
+                        <td>{% include 'visites/_photo_visiteur.html' with visiteur=visiteur %}</td>
                         <td>
                             <div class="name">{{ visiteur.nom_complet }}</div>
                             {% if visiteur.is_avocat and visiteur.cabinet_avocat %}
