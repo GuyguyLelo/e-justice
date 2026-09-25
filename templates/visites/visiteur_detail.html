@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ visiteur.nom_complet }} - Visiteur{% endblock %}
+
+{% block content %}
+<div class="fiche">
+    <div class="fiche-toolbar">
+        <h2><i class="bi bi-person"></i> Fiche visiteur</h2>
+        <div class="fiche-actions">
+            <a href="{% url 'visiteurs_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Liste</a>
+            {% if request.user.can_edit_visites %}
+            <a href="{% url 'visiteur_edit' visiteur.id %}" class="btn btn-primary"><i class="bi bi-pencil"></i> Modifier</a>
+            {% endif %}
+            {% if request.user.can_edit_visites %}
+            <a href="{% url 'visite_create' %}" class="btn btn-outline-primary"><i class="bi bi-plus"></i> Visite</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="id-banner">
+        <div class="id-photo">{{ visiteur.nom|first|upper }}{{ visiteur.prenom|first|upper }}</div>
+        <div>
+            <h1>{{ visiteur.nom }} {{ visiteur.prenom }}</h1>
+            <p class="id-meta">{{ visiteur.get_type_visiteur_display }} · {{ visiteur.relation_detenu }}</p>
+            <p class="id-meta">{{ visiteur.piece_identite }} n° {{ visiteur.numero_piece }}</p>
+        </div>
+        <div class="id-status">
+            <span class="status-badge">{{ visiteur.get_type_visiteur_display }}</span>
+            <span class="id-meta">{{ visiteur.telephone|default:"" }}</span>
+        </div>
+    </div>
+    <div class="kpi-row cols-3">
+        <div class="kpi"><span>Visites</span><strong>{{ visites|length }}</strong></div>
+        <div class="kpi"><span>Pièce</span><strong>{{ visiteur.piece_identite }}</strong></div>
+        <div class="kpi"><span>Enregistré</span><strong>{{ visiteur.created_at|date:"d/m/Y" }}</strong></div>
+    </div>
+    <div class="fiche-body">
+        <ul class="nav fiche-tabs">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-identite" type="button">Identité</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-visites" type="button">Visites</button></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab-identite">
+                <div class="dl-grid">
+                    <div class="dl-item"><span>Nom</span><strong>{{ visiteur.nom }}</strong></div>
+                    <div class="dl-item"><span>Prénom</span><strong>{{ visiteur.prenom }}</strong></div>
+                    <div class="dl-item"><span>Type</span><strong>{{ visiteur.get_type_visiteur_display }}</strong></div>
+                    <div class="dl-item"><span>Relation</span><strong>{{ visiteur.relation_detenu }}</strong></div>
+                    <div class="dl-item"><span>Pièce</span><strong>{{ visiteur.piece_identite }}</strong></div>
+                    <div class="dl-item"><span>N° pièce</span><strong>{{ visiteur.numero_piece }}</strong></div>
+                    <div class="dl-item"><span>Téléphone</span><strong>{{ visiteur.telephone|default:"—" }}</strong></div>
+                    <div class="dl-item dl-wide"><span>Adresse</span><strong>{{ visiteur.adresse|default:"—" }}</strong></div>
+                    {% if visiteur.is_avocat %}
+                    <div class="dl-item"><span>Cabinet</span><strong>{{ visiteur.cabinet_avocat|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>N° d'ordre</span><strong>{{ visiteur.numero_ordre_avocat|default:"—" }}</strong></div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="tab-pane fade" id="tab-visites">
+                {% if visites %}
+                <table class="table data-table">
+                    <thead><tr><th>Date</th><th>Détenu</th><th>Durée</th><th>Statut</th><th></th></tr></thead>
+                    <tbody>
+                    {% for visite in visites %}
+                    <tr>
+                        <td>{{ visite.date_visite|date:"d/m/Y H:i" }}</td>
+                        <td class="name">{{ visite.detenu.nom_complet }}</td>
+                        <td>{{ visite.duree_minutes }} min</td>
+                        <td>{{ visite.get_statut_display }}</td>
+                        <td><a href="{% url 'visite_detail' visite.id %}" class="btn btn-outline-primary btn-action"><i class="bi bi-eye"></i></a></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}<p class="text-muted mb-0">Aucune visite.</p>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

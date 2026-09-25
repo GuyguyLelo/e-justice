@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Libérer {{ detenu.nom_complet }} - e-Detenu{% endblock %}
+
+{% block extra_css %}
+<style>
+    .liberation-container {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .liberation-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .liberation-header {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+        border-radius: 1rem 1rem 0 0;
+        margin: -2rem -2rem 1.5rem -2rem;
+    }
+    
+    .liberation-header h2 {
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+    
+    .detenu-info {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-top: 1rem;
+        backdrop-filter: blur(10px);
+    }
+    
+    .detenu-info h3 {
+        color: white;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .detenu-info p {
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 0.25rem;
+    }
+    
+    .form-floating {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-floating label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .btn-liberer {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        border: none;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-liberer:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(40, 167, 69, 0.4);
+    }
+    
+    .btn-annuler {
+        background: #6c757d;
+        border: none;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 1rem;
+    }
+    
+    .btn-annuler:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+    
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+        font-weight: bold;
+    }
+    
+    .invalid-feedback {
+        display: block;
+        font-size: 0.875rem;
+        color: #dc3545;
+    }
+    
+    .is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="liberation-container">
+    <div class="liberation-card">
+        <!-- Header -->
+        <div class="liberation-header">
+            <h2><i class="bi bi-unlock"></i> Libération de Détenu</h2>
+            <p class="mb-0">Enregistrement de libération du système pénitentiaire</p>
+        </div>
+        
+        <!-- Informations du détenu -->
+        <div class="detenu-info">
+            <h3>{{ detenu.nom_complet }}</h3>
+            <p><strong>Matricule:</strong> {{ detenu.matricule }}</p>
+            <p><strong>Cellule:</strong> {{ detenu.cellule }}</p>
+            <p><strong>Date d'incarcération:</strong> {{ detenu.date_incarceration|date:"d/m/Y" }}</p>
+            <p><strong>Durée de détention:</strong> {{ detenu.duree_detention }} jours</p>
+        </div>
+        
+        <!-- Formulaire de libération -->
+        <form method="post" enctype="multipart/form-data" id="liberationForm" novalidate>
+            {% csrf_token %}
+            
+            <div class="form-floating">
+                {{ form.date_liberation }}
+                <label for="{{ form.date_liberation.id_for_label }}" class="required-field">Date de libération</label>
+                {% if form.date_liberation.errors %}
+                <div class="invalid-feedback">{{ form.date_liberation.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-floating">
+                {{ form.motif_liberation }}
+                <label for="{{ form.motif_liberation.id_for_label }}" class="required-field">Motif de libération</label>
+                {% if form.motif_liberation.errors %}
+                <div class="invalid-feedback">{{ form.motif_liberation.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Actions -->
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-liberer text-white">
+                    <i class="bi bi-check-circle"></i> Confirmer la libération
+                </button>
+                <a href="{% url 'detenu_detail' detenu.id %}" class="btn btn-annuler text-white text-decoration-none">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('liberationForm');
+    const dateLiberationField = document.querySelector('[name="date_liberation"]');
+    const motifLiberationField = document.querySelector('[name="motif_liberation"]');
+    
+    // Validation en temps réel
+    form.addEventListener('submit', function(e) {
+        let hasErrors = false;
+        let errorMessages = [];
+        
+        // Validation de la date
+        if (!dateLiberationField.value.trim()) {
+            dateLiberationField.classList.add('is-invalid');
+            hasErrors = true;
+            errorMessages.push('La date de libération est obligatoire');
+        } else {
+            dateLiberationField.classList.remove('is-invalid');
+        }
+        
+        // Validation du motif
+        if (!motifLiberationField.value.trim()) {
+            motifLiberationField.classList.add('is-invalid');
+            hasErrors = true;
+            errorMessages.push('Le motif de libération est obligatoire');
+        } else {
+            motifLiberationField.classList.remove('is-invalid');
+        }
+        
+        // Validation de la date par rapport à la date d'incarcération
+        const dateIncarceration = new Date('{{ detenu.date_incarceration|date:"Y-m-d" }}');
+        const dateLiberation = new Date(dateLiberationField.value);
+        
+        if (dateLiberation <= dateIncarceration) {
+            dateLiberationField.classList.add('is-invalid');
+            hasErrors = true;
+            errorMessages.push('La date de libération doit être postérieure à la date d\'incarcération');
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+            alert('Veuillez corriger les erreurs suivantes :\n' + errorMessages.join('\n'));
+            return false;
+        }
+    });
+    
+    // Auto-formatage de la date
+    dateLiberationField.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+    });
+    
+    motifLiberationField.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+    });
+    
+    // Définir la date par défaut à aujourd'hui
+    if (!dateLiberationField.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateLiberationField.value = today;
+    }
+});
+</script>
+{% endblock %}

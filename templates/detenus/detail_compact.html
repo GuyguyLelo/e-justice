@@ -1,0 +1,485 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ detenu.nom_complet }} - e-Detenu{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fiche { padding: 0.6rem 0.9rem 1rem; }
+    .fiche-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.55rem;
+    }
+    .fiche-toolbar h2 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #003366;
+    }
+    .fiche-actions { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+    .fiche-actions .btn {
+        border-radius: 0;
+        font-size: 0.72rem;
+        padding: 0.28rem 0.55rem;
+        font-weight: 600;
+    }
+
+    .id-banner {
+        display: grid;
+        grid-template-columns: 88px 1fr auto;
+        gap: 0.85rem;
+        align-items: center;
+        background: #004a94;
+        color: #fff;
+        padding: 0.7rem 0.9rem;
+        border-bottom: 3px solid #f7d116;
+        margin-bottom: 0.55rem;
+    }
+    .id-photo {
+        width: 88px;
+        height: 110px;
+        object-fit: cover;
+        background: #0066c7;
+        border: 1px solid rgba(255,255,255,0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: 700;
+    }
+    .id-banner h1 {
+        margin: 0 0 0.15rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+    .id-meta { font-size: 0.78rem; opacity: 0.9; margin: 0; }
+    .id-status {
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        align-items: flex-end;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 0.18rem 0.5rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        background: #ce1020;
+        color: #fff;
+    }
+    .status-libere { background: #1b7a3d; }
+    .status-transfere { background: #c9a227; color: #12263a; }
+    .status-evade { background: #5b6b7c; }
+    .status-decede { background: #212529; }
+
+    .kpi-row {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.35rem;
+        margin-bottom: 0.55rem;
+    }
+    .kpi {
+        background: #fff;
+        border: 1px solid #d5dee8;
+        border-left: 3px solid #0066c7;
+        padding: 0.35rem 0.5rem;
+    }
+    .kpi span {
+        display: block;
+        font-size: 0.62rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #5b6b7c;
+    }
+    .kpi strong { font-size: 0.88rem; color: #003366; }
+
+    .fiche-body { background: #fff; border: 1px solid #d5dee8; }
+    .fiche-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        border-bottom: 2px solid #0066c7;
+        background: #f4f8fc;
+    }
+    .fiche-tabs .nav-link {
+        border: none;
+        border-radius: 0;
+        color: #004a94;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.5rem 0.85rem;
+    }
+    .fiche-tabs .nav-link.active {
+        background: #0066c7;
+        color: #fff;
+    }
+    .tab-pane { padding: 0.75rem 0.85rem; }
+
+    .dl-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.55rem 0.85rem;
+    }
+    .dl-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .dl-item span {
+        display: block;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #5b6b7c;
+        margin-bottom: 0.08rem;
+    }
+    .dl-item strong {
+        font-size: 0.85rem;
+        color: #12263a;
+        font-weight: 600;
+    }
+    .dl-wide { grid-column: 1 / -1; }
+
+    .photos-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    .photo-tile { text-align: center; }
+    .photo-tile img {
+        width: 140px;
+        height: 170px;
+        object-fit: cover;
+        border: 1px solid #d5dee8;
+        cursor: pointer;
+        background: #eef3f8;
+    }
+    .photo-tile small {
+        display: block;
+        margin-top: 0.2rem;
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        color: #004a94;
+        font-weight: 700;
+    }
+
+    .hist-row {
+        display: grid;
+        grid-template-columns: 7.5rem 1fr auto;
+        gap: 0.5rem;
+        padding: 0.35rem 0;
+        border-bottom: 1px solid #e8eef4;
+        font-size: 0.8rem;
+    }
+    .hist-row:last-child { border-bottom: none; }
+    .kpi a, a.kpi { text-decoration: none; color: inherit; cursor: pointer; }
+    a.kpi:hover { background: #f4f8fc; }
+
+    .visites-table { margin: 0; font-size: 0.8rem; }
+    .visites-table thead th {
+        background: #0066c7;
+        color: #fff;
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.35rem 0.45rem;
+        border: none;
+        font-weight: 600;
+    }
+    .visites-table tbody td {
+        padding: 0.32rem 0.45rem;
+        vertical-align: middle;
+        border-color: #e8eef4;
+    }
+    .visites-table .name { font-weight: 700; color: #003366; }
+    .visites-table .mat { color: #5b6b7c; font-size: 0.72rem; }
+    .visites-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .visites-head .btn { border-radius: 0; font-size: 0.72rem; font-weight: 600; padding: 0.25rem 0.55rem; }
+
+    @media (max-width: 992px) {
+        .id-banner { grid-template-columns: 72px 1fr; }
+        .id-status { grid-column: 1 / -1; align-items: flex-start; text-align: left; }
+        .kpi-row, .dl-grid, .dl-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fiche">
+    <div class="fiche-toolbar">
+        <h2><i class="bi bi-person-vcard"></i> Fiche détenu</h2>
+        <div class="fiche-actions">
+            <a href="{% url 'detenus_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Liste</a>
+            <a href="#tab-visites" class="btn btn-outline-primary js-open-visites"><i class="bi bi-calendar-week"></i> Visites</a>
+            {% if request.user.can_manage_centre_detenus %}
+            <a href="{% url 'generer_fiche_detenu' detenu.id %}" class="btn btn-warning"><i class="bi bi-file-pdf"></i> PDF</a>
+            {% endif %}
+            {% if request.user.can_edit_detenus %}
+            <a href="{% url 'detenu_edit' detenu.id %}" class="btn btn-primary"><i class="bi bi-pencil"></i> Modifier</a>
+            <a href="{% url 'biometric_capture' %}?detenu_id={{ detenu.id }}" class="btn btn-outline-primary"><i class="bi bi-fingerprint"></i> Biométrie</a>
+            {% if detenu.statut == 'INCARCERE' %}
+            <a href="{% url 'detenu_liberation' detenu.id %}" class="btn btn-success"><i class="bi bi-unlock"></i> Libérer</a>
+            <a href="{% url 'detenu_transfert' detenu.id %}" class="btn btn-outline-warning"><i class="bi bi-arrow-left-right"></i> Transférer</a>
+            {% endif %}
+            <a href="{% url 'detenu_delete' detenu.id %}" class="btn btn-outline-danger"><i class="bi bi-trash"></i> Supprimer</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="id-banner">
+        {% if detenu.photo_face %}
+        <img src="{{ detenu.photo_face.url }}" alt="" class="id-photo" onclick="openPhotoModal('{{ detenu.photo_face.url }}', 'Photo de face')">
+        {% elif detenu.photo_profil %}
+        <img src="{{ detenu.photo_profil.url }}" alt="" class="id-photo" onclick="openPhotoModal('{{ detenu.photo_profil.url }}', 'Photo de profil')">
+        {% else %}
+        <div class="id-photo">{{ detenu.nom|first|upper }}{{ detenu.prenom|first|upper }}</div>
+        {% endif %}
+        <div>
+            <h1>{{ detenu.nom }} {{ detenu.prenom }}</h1>
+            <p class="id-meta">Matricule {{ detenu.matricule }}{% if detenu.centre %} · {{ detenu.centre.nom }}{% endif %}</p>
+            <p class="id-meta">{{ detenu.get_sexe_display }} · {{ detenu.age }} ans · Né{% if detenu.sexe == 'F' %}e{% endif %} le {{ detenu.date_naissance|date:"d/m/Y" }} à {{ detenu.lieu_naissance }}</p>
+        </div>
+        <div class="id-status">
+            <span class="status-badge status-{{ detenu.statut|lower }}">{{ detenu.get_statut_display }}</span>
+            <span class="id-meta">Cellule {{ detenu.cellule|default:"—" }}</span>
+            <span class="id-meta">{{ detenu.get_regime_display }}</span>
+        </div>
+    </div>
+
+    <div class="kpi-row">
+        <div class="kpi"><span>Incarcération</span><strong>{{ detenu.date_incarceration|date:"d/m/Y" }}</strong></div>
+        <div class="kpi"><span>Durée écoulée</span><strong>{{ detenu.duree_detention }} j</strong></div>
+        <div class="kpi"><span>Peine</span><strong>{% if detenu.duree_peine_mois %}{{ detenu.duree_peine_mois }} mois{% else %}—{% endif %}</strong></div>
+        <a href="#tab-visites" class="kpi kpi-link" data-bs-toggle="tab" data-bs-target="#tab-visites" role="tab"><span>Visites</span><strong>{{ nb_visites }}</strong></a>
+        <div class="kpi"><span>Consultations</span><strong>{{ detenu.consultations.count }}</strong></div>
+    </div>
+
+    <div class="fiche-body">
+        <ul class="nav fiche-tabs" role="tablist">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-identite" type="button">Identité</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-justice" type="button">Judiciaire</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-detention" type="button">Détention</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-sante" type="button">Santé & biométrie</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-visites" type="button">Visites ({{ nb_visites }})</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-historique" type="button">Historique</button></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab-identite">
+                <div class="dl-grid">
+                    <div class="dl-item"><span>Nom</span><strong>{{ detenu.nom }}</strong></div>
+                    <div class="dl-item"><span>Prénom</span><strong>{{ detenu.prenom }}</strong></div>
+                    <div class="dl-item"><span>Sexe</span><strong>{{ detenu.get_sexe_display }}</strong></div>
+                    <div class="dl-item"><span>Âge</span><strong>{{ detenu.age }} ans</strong></div>
+                    <div class="dl-item"><span>Date de naissance</span><strong>{{ detenu.date_naissance|date:"d/m/Y" }}</strong></div>
+                    <div class="dl-item"><span>Lieu de naissance</span><strong>{{ detenu.lieu_naissance }}</strong></div>
+                    <div class="dl-item"><span>Nationalité</span><strong>{{ detenu.nationalite }}</strong></div>
+                    <div class="dl-item"><span>Profession</span><strong>{{ detenu.profession|default:"—" }}</strong></div>
+                    <div class="dl-item dl-wide"><span>Adresse</span><strong>{{ detenu.adresse|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Téléphone</span><strong>{{ detenu.telephone|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Créé le</span><strong>{{ detenu.created_at|date:"d/m/Y H:i" }}</strong></div>
+                    <div class="dl-item"><span>Modifié le</span><strong>{{ detenu.updated_at|date:"d/m/Y H:i" }}</strong></div>
+                    <div class="dl-item"><span>Créé par</span><strong>{{ detenu.created_by.get_full_name|default:"—" }}</strong></div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-justice">
+                <div class="dl-grid cols-3">
+                    <div class="dl-item"><span>Date d'arrestation</span><strong>{{ detenu.date_arrestation|date:"d/m/Y" }}</strong></div>
+                    <div class="dl-item"><span>Date d'incarcération</span><strong>{{ detenu.date_incarceration|date:"d/m/Y" }}</strong></div>
+                    <div class="dl-item"><span>Régime</span><strong>{{ detenu.get_regime_display }}</strong></div>
+                    <div class="dl-item"><span>Tribunal</span><strong>{{ detenu.tribunal|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>N° dossier</span><strong>{{ detenu.numero_dossier|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Avocat</span><strong>{{ detenu.avocat|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Tél. avocat</span><strong>{{ detenu.telephone_avocat|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Durée de peine</span><strong>{% if detenu.duree_peine_mois %}{{ detenu.duree_peine_mois }} mois{% else %}—{% endif %}</strong></div>
+                    <div class="dl-item"><span>Libération prévue</span><strong>{{ detenu.date_liberation_prevue|date:"d/m/Y"|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Libération effective</span><strong>{{ detenu.date_liberation_effective|date:"d/m/Y"|default:"—" }}</strong></div>
+                    <div class="dl-item dl-wide"><span>Motif d'incarcération</span><strong>{{ detenu.motif_incarceration }}</strong></div>
+                    {% if detenu.motif_liberation %}
+                    <div class="dl-item dl-wide"><span>Motif de libération</span><strong>{{ detenu.motif_liberation }}</strong></div>
+                    {% endif %}
+                    <div class="dl-item"><span>Dossier joint</span>
+                        <strong>
+                            {% if detenu.dossier %}
+                            <a href="{% url 'download_dossier' detenu.id %}"><i class="bi bi-download"></i> Télécharger</a>
+                            {% else %}—{% endif %}
+                        </strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-detention">
+                <div class="dl-grid cols-3">
+                    <div class="dl-item"><span>Centre</span><strong>{{ detenu.centre.nom|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Cellule</span><strong>{{ detenu.cellule|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Statut</span><strong>{{ detenu.get_statut_display }}</strong></div>
+                    <div class="dl-item"><span>Régime</span><strong>{{ detenu.get_regime_display }}</strong></div>
+                    <div class="dl-item"><span>Jours de détention</span><strong>{{ detenu.duree_detention }}</strong></div>
+                    <div class="dl-item"><span>Peut recevoir des visites</span><strong>{% if detenu.can_be_visited %}Oui{% else %}Non{% endif %}</strong></div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-sante">
+                <div class="dl-grid">
+                    <div class="dl-item"><span>Groupe sanguin</span><strong>{{ detenu.groupe_sanguin|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Allergies</span><strong>{{ detenu.allergies|default:"Aucune" }}</strong></div>
+                    <div class="dl-item"><span>Maladies chroniques</span><strong>{{ detenu.maladies_chroniques|default:"Aucune" }}</strong></div>
+                    <div class="dl-item"><span>Taille</span><strong>{% if detenu.taille %}{{ detenu.taille }} cm{% else %}—{% endif %}</strong></div>
+                    <div class="dl-item"><span>Poids</span><strong>{% if detenu.poids %}{{ detenu.poids }} kg{% else %}—{% endif %}</strong></div>
+                    <div class="dl-item"><span>Yeux</span><strong>{{ detenu.get_couleur_yeux_display|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Cheveux</span><strong>{{ detenu.get_couleur_cheveux_display|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Type de cheveux</span><strong>{{ detenu.get_type_cheveux_display|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Teint</span><strong>{{ detenu.get_couleur_peau_display|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Empreintes</span><strong>{% if detenu.empreintes_digitales %}Enregistrées{% else %}Non{% endif %}</strong></div>
+                    <div class="dl-item"><span>ADN</span><strong>{% if detenu.adn %}Enregistré{% else %}Non{% endif %}</strong></div>
+                    <div class="dl-item dl-wide"><span>Cicatrices et marques</span><strong>{{ detenu.cicatrices|default:"Aucune" }}</strong></div>
+                </div>
+                <div class="photos-row">
+                    {% if detenu.photo_face %}
+                    <div class="photo-tile">
+                        <img src="{{ detenu.photo_face.url }}" alt="Face" onclick="openPhotoModal('{{ detenu.photo_face.url }}', 'Photo de face')">
+                        <small>Face</small>
+                    </div>
+                    {% endif %}
+                    {% if detenu.photo_profil %}
+                    <div class="photo-tile">
+                        <img src="{{ detenu.photo_profil.url }}" alt="Profil" onclick="openPhotoModal('{{ detenu.photo_profil.url }}', 'Photo de profil')">
+                        <small>Profil</small>
+                    </div>
+                    {% endif %}
+                    {% if not detenu.photo_face and not detenu.photo_profil %}
+                    <p class="text-muted mb-0">Aucune photo enregistrée.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-visites">
+                <div class="visites-head">
+                    <div class="text-muted" style="font-size:0.78rem;">
+                        {{ nb_visites }} visite{{ nb_visites|pluralize }} · {{ nb_visites_terminees }} terminée{{ nb_visites_terminees|pluralize }} · {{ nb_visites_programmees }} programmée{{ nb_visites_programmees|pluralize }}
+                    </div>
+                    <div class="d-flex gap-1">
+                        <a href="{% url 'visites_list' %}?detenu={{ detenu.id }}&date=all" class="btn btn-outline-secondary">Liste complète</a>
+                        {% if request.user.can_edit_visites %}
+                        <a href="{% url 'visite_create' %}?detenu={{ detenu.id }}" class="btn btn-primary"><i class="bi bi-plus"></i> Nouvelle visite</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if visites %}
+                <div class="table-responsive">
+                    <table class="table visites-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Visiteur</th>
+                                <th>Type</th>
+                                <th>Durée</th>
+                                <th>Statut</th>
+                                <th>Objets</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for visite in visites %}
+                            <tr>
+                                <td>
+                                    <div class="name">{{ visite.date_visite|date:"d/m/Y" }}</div>
+                                    <div class="mat">{{ visite.date_visite|time:"H:i" }}</div>
+                                </td>
+                                <td>
+                                    <div class="name">{{ visite.visiteur.nom_complet }}</div>
+                                    <div class="mat">{{ visite.visiteur.relation_detenu|default:"" }}</div>
+                                </td>
+                                <td>{{ visite.visiteur.get_type_visiteur_display }}</td>
+                                <td>{{ visite.duree_minutes }} min</td>
+                                <td>
+                                    <span class="status-badge
+                                        {% if visite.statut == 'PROGRAMMEE' %}status-transfere
+                                        {% elif visite.statut == 'EN_COURS' %}
+                                        {% elif visite.statut == 'TERMINEE' %}status-libere
+                                        {% elif visite.statut == 'ANNULEE' %}status-evade
+                                        {% elif visite.statut == 'REFUSEE' %}
+                                        {% endif %}">{{ visite.get_statut_display }}</span>
+                                </td>
+                                <td>{{ visite.objets_apportes|default:"—"|truncatechars:40 }}</td>
+                                <td>
+                                    <a href="{% url 'visite_detail' visite.id %}" class="btn btn-outline-primary btn-sm" style="border-radius:0;font-size:0.7rem;padding:0.15rem 0.4rem;"><i class="bi bi-eye"></i></a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p class="text-muted mb-0">Aucune visite enregistrée pour ce détenu.</p>
+                {% endif %}
+            </div>
+
+            <div class="tab-pane fade" id="tab-historique">
+                {% if historique %}
+                    {% for item in historique %}
+                    <div class="hist-row">
+                        <time>{{ item.created_at|date:"d/m/Y H:i" }}</time>
+                        <div>
+                            <strong>{{ item.action }}</strong>
+                            {% if item.nouvelle_valeur %}<div class="text-muted">{{ item.nouvelle_valeur }}</div>{% endif %}
+                        </div>
+                        <span>{{ item.utilisateur.get_full_name|default:"" }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">Aucun historique.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:0;">
+            <div class="modal-header" style="border-radius:0; background:#004a94; color:#fff;">
+                <h5 class="modal-title" id="photoModalLabel">Photo</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalPhoto" src="" alt="" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openPhotoModal(photoUrl, title) {
+    document.getElementById('photoModalLabel').textContent = title;
+    document.getElementById('modalPhoto').src = photoUrl;
+    new bootstrap.Modal(document.getElementById('photoModal')).show();
+}
+function openVisitesTab() {
+    var btn = document.querySelector('[data-bs-target="#tab-visites"]');
+    if (btn && typeof bootstrap !== 'undefined') {
+        new bootstrap.Tab(btn).show();
+    }
+}
+document.querySelectorAll('.js-open-visites, a.kpi[data-bs-target="#tab-visites"]').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+        e.preventDefault();
+        openVisitesTab();
+    });
+});
+if (window.location.hash === '#tab-visites' || new URLSearchParams(window.location.search).get('tab') === 'visites') {
+    openVisitesTab();
+}
+</script>
+{% endblock %}

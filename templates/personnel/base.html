@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion du Personnel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .personnel-card {
+        transition: transform 0.2s ease-in-out;
+    }
+    .personnel-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .statut-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .personnel-actions {
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+    }
+    .personnel-card:hover .personnel-actions {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">{% block page_title %}Gestion du Personnel{% endblock %}</h1>
+                    <p class="text-muted mb-0">{% block page_subtitle %}Gérez le personnel pénitentiaire{% endblock %}</p>
+                </div>
+                <div>
+                    {% block page_actions %}
+                    <a href="{% url 'personnel_list' %}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-list"></i> Liste du personnel
+                    </a>
+                    <a href="{% url 'personnel_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Nouveau membre
+                    </a>
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Content -->
+    <div class="row">
+        <div class="col-12">
+            {% block content_personnel %}
+            {% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Actions rapides sur le personnel
+    function actionPersonnel(personnelId, action) {
+        fetch(`/api/personnel/${personnelId}/action/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({action: action})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Une erreur est survenue');
+        });
+    }
+
+    // Recherche en temps réel
+    function setupSearch() {
+        const searchInput = document.getElementById('search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value;
+                if (query.length >= 2) {
+                    // Implémenter la recherche AJAX si nécessaire
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setupSearch();
+    });
+</script>
+{% endblock %}
+
+

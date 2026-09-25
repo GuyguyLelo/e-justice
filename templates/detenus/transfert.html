@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Transfert de Détenu{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-arrow-right-circle"></i> {{ title }}
+                    </h1>
+                    <p class="text-muted mb-0">Transférer le détenu vers un autre établissement</p>
+                </div>
+                <div>
+                    <a href="{% url 'detenu_detail' detenu.id %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left"></i> Retour au détail
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Informations du détenu -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-person"></i> Informations du détenu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                    {{ detenu.nom|first|upper }}
+                                </div>
+                                <div>
+                                    <strong>{{ detenu.nom_complet }}</strong>
+                                    <br>
+                                    <span class="badge bg-info">{{ detenu.matricule }}</span>
+                                    <br>
+                                    <small class="text-muted">Cellule: {{ detenu.cellule }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <small class="text-muted">Date d'incarcération</small>
+                                    <br>
+                                    <strong>{{ detenu.date_incarceration|date:"d/m/Y" }}</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Statut actuel</small>
+                                    <br>
+                                    <span class="badge bg-warning">{{ detenu.get_statut_display }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire de transfert -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-geo-alt"></i> Informations de transfert
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="transfertForm">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-info-circle"></i> Détails du transfert
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    {{ form.destination }}
+                                    <label for="{{ form.destination.id_for_label }}">Destination *</label>
+                                    {% if form.destination.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.destination.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                    <div class="form-text">Nom de l'établissement de destination</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    {{ form.date_transfert }}
+                                    <label for="{{ form.date_transfert.id_for_label }}">Date de transfert *</label>
+                                    {% if form.date_transfert.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.date_transfert.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-floating mb-3">
+                                    {{ form.motif_transfert }}
+                                    <label for="{{ form.motif_transfert.id_for_label }}">Motif du transfert *</label>
+                                    {% if form.motif_transfert.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.motif_transfert.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Avertissement -->
+                        <div class="alert alert-warning">
+                            <h6><i class="bi bi-exclamation-triangle"></i> Attention !</h6>
+                            <p class="mb-0">
+                                Le transfert de ce détenu changera son statut à "Transféré" et sera enregistré dans l'historique. 
+                                Cette action est irréversible.
+                            </p>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'detenu_detail' detenu.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-arrow-right-circle"></i> Confirmer le transfert
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validation en temps réel
+    const form = document.getElementById('transfertForm');
+    const requiredFields = ['destination', 'date_transfert', 'motif_transfert'];
+    
+    form.addEventListener('submit', function(e) {
+        let hasErrors = false;
+        let errorMessages = [];
+        
+        requiredFields.forEach(function(fieldName) {
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            const label = field.closest('.form-floating').querySelector('label').textContent;
+            
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                hasErrors = true;
+                errorMessages.push(`${label} est obligatoire`);
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        // Validation de la date de transfert
+        const dateTransfertField = document.querySelector('[name="date_transfert"]');
+        if (dateTransfertField.value) {
+            const dateTransfert = new Date(dateTransfertField.value);
+            const dateIncarceration = new Date('{{ detenu.date_incarceration|date:"Y-m-d" }}');
+            
+            if (dateTransfert <= dateIncarceration) {
+                dateTransfertField.classList.add('is-invalid');
+                hasErrors = true;
+                errorMessages.push('La date de transfert doit être postérieure à la date d\'incarcération');
+            }
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+            alert('Veuillez corriger les erreurs suivantes :\n' + errorMessages.join('\n'));
+            return false;
+        }
+        
+        // Confirmation finale
+        if (!confirm('Êtes-vous sûr de vouloir transférer ce détenu ? Cette action est irréversible.')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // Mise à jour de la date minimum
+    const dateField = document.querySelector('[name="date_transfert"]');
+    if (dateField) {
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        dateField.min = tomorrow.toISOString().split('T')[0];
+    }
+});
+</script>
+{% endblock %}
+
+

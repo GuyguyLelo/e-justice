@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block title %}Surveillance{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-video"></i> Surveillance
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshCameras()">
+                            <i class="fas fa-sync"></i> Actualiser
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">Caméras</h4>
+                            <h2 id="cameras-count">0</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-video fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">Actives</h4>
+                            <h2 id="active-count">0</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">Détections</h4>
+                            <h2 id="detections-count">0</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">Alertes</h4>
+                            <h2 id="alerts-count">0</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Caméras Grid -->
+    <div class="row" id="cameras-grid">
+        <!-- Les caméras seront chargées ici -->
+    </div>
+</div>
+
+<!-- Modal pour les détails de détection -->
+<div class="modal fade" id="detectionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Détails de la Détection</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detection-details">
+                <!-- Contenu dynamique -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let refreshInterval = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadCameras();
+    loadStats();
+    
+    // Rafraîchir toutes les 30 secondes
+    refreshInterval = setInterval(function() {
+        loadCameras();
+        loadStats();
+    }, 30000);
+});
+
+function loadCameras() {
+    fetch('/api/surveillance/cameras/')
+        .then(response => response.json())
+        .then(data => {
+            displayCameras(data.results || data);
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            document.getElementById('cameras-grid').innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Erreur lors du chargement des caméras
+                    </div>
+                </div>
+            `;
+        });
+}
+
+function loadStats() {
+    fetch('/surveillance/api/camera-stats/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('cameras-count').textContent = data.total || 0;
+            document.getElementById('active-count').textContent = data.actives || 0;
+        })
+        .catch(error => console.error('Erreur stats:', error));
+    
+    fetch('/surveillance/api/detection-stats/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('detections-count').textContent = data.aujourd_hui || 0;
+        })
+        .catch(error => console.error('Erreur stats:', error));
+    
+    fetch('/surveillance/api/alerte-stats/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('alerts-count').textContent = data.actives || 0;
+        })
+        .catch(error => console.error('Erreur stats:', error));
+}
+
+function displayCameras(cameras) {
+    const grid = document.getElementById('cameras-grid');
+    
+    if (!cameras || cameras.length === 0) {
+        grid.innerHTML = `
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-video-slash fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Aucune caméra configurée</h4>
+                    <p class="text-muted">Commencez par ajouter des caméras au système.</p>
+                    <a href="/admin/surveillance/camera/add/" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Ajouter une caméra
+                    </a>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = cameras.map(camera => `
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card camera-card ${camera.statut === 'ACTIVE' ? 'border-success' : 'border-secondary'}">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">${camera.nom}</h6>
+                    <span class="badge bg-${camera.statut === 'ACTIVE' ? 'success' : 'secondary'}">
+                        ${camera.statut === 'ACTIVE' ? 'Active' : 'Inactive'}
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Flux vidéo (placeholder pour l'instant) -->
+                    <div class="camera-feed" style="height: 200px; background: #000; position: relative;">
+                        <img src="https://picsum.photos/seed/camera${camera.id}/400/200.jpg" 
+                             alt="Flux caméra ${camera.nom}" 
+                             class="w-100 h-100 object-fit-cover"
+                             style="opacity: 0.8;">
+                        <div class="camera-overlay">
+                            <div class="detection-info" id="detection-${camera.id}">
+                                <span class="badge bg-info">En attente...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Emplacement</small>
+                            <p class="mb-0">${camera.emplacement || 'Non défini'}</p>
+                        </div>
+                        <div class="col-6 text-end">
+                            <button class="btn btn-sm btn-primary" onclick="startDetection(${camera.id})">
+                                <i class="fas fa-play"></i> Détecter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function startDetection(cameraId) {
+    const detectionDiv = document.getElementById(`detection-${cameraId}`);
+    detectionDiv.innerHTML = '<span class="badge bg-warning">Analyse...</span>';
+    
+    // Simuler une détection (remplacer par vraie API plus tard)
+    setTimeout(() => {
+        const detections = [
+            { name: 'Jean DUPONT', confidence: 95, alert: false },
+            { name: 'Inconnu', confidence: 0, alert: true },
+            { name: 'Aucune détection', confidence: 0, alert: false }
+        ];
+        
+        const randomDetection = detections[Math.floor(Math.random() * detections.length)];
+        
+        if (randomDetection.alert) {
+            detectionDiv.innerHTML = `
+                <span class="badge bg-danger">
+                    <i class="fas fa-exclamation-triangle"></i> ${randomDetection.name}
+                </span>
+            `;
+        } else if (randomDetection.confidence > 0) {
+            detectionDiv.innerHTML = `
+                <span class="badge bg-success">
+                    <i class="fas fa-user-check"></i> ${randomDetection.name} (${randomDetection.confidence}%)
+                </span>
+            `;
+        } else {
+            detectionDiv.innerHTML = '<span class="badge bg-secondary">Aucune détection</span>';
+        }
+    }, 2000);
+}
+
+function refreshCameras() {
+    loadCameras();
+    loadStats();
+}
+
+// Nettoyer l'intervalle quand on quitte la page
+window.addEventListener('beforeunload', function() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+});
+</script>
+
+<style>
+.camera-feed {
+    position: relative;
+    overflow: hidden;
+}
+
+.camera-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.detection-info {
+    background: rgba(0,0,0,0.7);
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: white;
+    font-size: 0.8rem;
+}
+
+.camera-card {
+    transition: transform 0.2s;
+}
+
+.camera-card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

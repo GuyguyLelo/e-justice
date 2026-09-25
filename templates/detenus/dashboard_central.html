@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dash-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .panel-box {
+        background: #fff;
+        border: 1px solid #d5dee8;
+    }
+    .panel-box h3 {
+        margin: 0;
+        padding: 0.38rem 0.5rem;
+        background: #0066c7;
+        color: #fff;
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .panel-box .panel-body { padding: 0.45rem 0.55rem 0.55rem; }
+    .cap-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        margin-bottom: 0.28rem;
+        color: #12263a;
+    }
+    .cap-bar {
+        height: 8px;
+        background: #e8eef4;
+        margin: 0.4rem 0 0.2rem;
+    }
+    .cap-bar > span { display: block; height: 100%; background: #0066c7; }
+    .cap-bar.high > span { background: #ce1020; }
+    .cap-bar.mid > span { background: #c9a227; }
+    .chart-wrap { position: relative; height: 220px; padding: 0.25rem 0.4rem 0.4rem; }
+    .dash-central .stat-chip strong {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+    }
+    .dash-central a.stat-chip,
+    .dash-central a.stat-chip:link,
+    .dash-central a.stat-chip:visited,
+    .dash-central a.stat-chip:hover,
+    .dash-central a.stat-chip:focus,
+    .dash-central a.stat-chip:active {
+        text-decoration: none;
+        color: #fff;
+        display: block;
+    }
+    .dash-central a.stat-chip:hover { filter: brightness(1.1); color: #fff; }
+    .dash-central a.stat-chip strong,
+    .dash-central a.stat-chip span,
+    .dash-central a.stat-chip i { color: #fff; }
+    @media (max-width: 992px) {
+        .dash-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="list-wrap dash-central">
+    <div class="list-head">
+        <h2><i class="bi bi-building"></i> Dashboard central — Centres pénitenciers</h2>
+        <div class="d-flex gap-1 flex-wrap">
+            <a href="{% url 'centres_list' %}" class="btn btn-primary"><i class="bi bi-building"></i> Centres</a>
+            <a href="{% url 'admins_prison_list' %}" class="btn btn-outline-secondary"><i class="bi bi-person-gear"></i> Admins</a>
+            {% if request.user.can_create_centres %}
+            <a href="{% url 'centre_create' %}" class="btn btn-outline-primary"><i class="bi bi-plus"></i> Nouveau centre</a>
+            {% endif %}
+            {% if request.user.can_create_admins %}
+            <a href="{% url 'admin_prison_create' %}" class="btn btn-outline-primary"><i class="bi bi-plus"></i> Nouvel admin</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="stats-strip cols-3">
+        <a class="stat-chip" href="{% url 'centres_list' %}" title="Consulter les centres">
+            <strong><i class="bi bi-building"></i> {{ stats.total_centres }}</strong><span>Centres</span>
+        </a>
+        <a class="stat-chip" href="{% url 'detenus_list' %}" title="Consulter tous les détenus">
+            <strong><i class="bi bi-people"></i> {{ stats.total_detenus }}</strong><span>Détenus</span>
+        </a>
+        <a class="stat-chip inc" href="{% url 'detenus_list' %}?statut=INCARCERE" title="Consulter les incarcérés">
+            <strong><i class="bi bi-lock-fill"></i> {{ stats.detenus_incarceres }}</strong><span>Incarcérés</span>
+        </a>
+    </div>
+    <div class="stats-strip cols-3">
+        <a class="stat-chip inc" href="{% url 'detenus_list' %}?statut=INCARCERE&sexe=M" title="Consulter les hommes incarcérés">
+            <strong><i class="bi bi-gender-male"></i> {{ stats.hommes_incarceres }}</strong><span>Hommes incarcérés</span>
+        </a>
+        <a class="stat-chip inc" href="{% url 'detenus_list' %}?statut=INCARCERE&sexe=F" title="Consulter les femmes incarcérées">
+            <strong><i class="bi bi-gender-female"></i> {{ stats.femmes_incarceres }}</strong><span>Femmes incarcérées</span>
+        </a>
+        <a class="stat-chip {% if stats.taux_occupation_global > 80 %}inc{% elif stats.taux_occupation_global > 60 %}tr{% else %}lib{% endif %}" href="{% url 'centres_list' %}" title="Consulter l'occupation des centres">
+            <strong><i class="bi bi-pie-chart-fill"></i> {{ stats.taux_occupation_global|floatformat:0 }} %</strong><span>Occupation</span>
+        </a>
+    </div>
+
+    {{ graphiques|json_script:"dash-graphiques" }}
+    <div class="dash-grid">
+        <div class="panel-box">
+            <h3>Incarcérés par sexe</h3>
+            <div class="chart-wrap"><canvas id="chartSexe"></canvas></div>
+        </div>
+        <div class="panel-box">
+            <h3>Occupation des centres</h3>
+            <div class="chart-wrap"><canvas id="chartOccupation"></canvas></div>
+        </div>
+    </div>
+
+    <div class="dash-grid">
+        <div class="panel-box">
+            <h3>Capacité nationale</h3>
+            <div class="data-table-wrap" style="border:none;">
+            <table class="table data-table">
+                <tbody>
+                    <tr><td><div class="name">Maximale</div></td><td class="name">{{ stats.capacite_totale }}</td></tr>
+                    <tr><td><div class="name">Utilisée</div></td><td class="name">{{ stats.capacite_utilisee }}</td></tr>
+                    <tr><td><div class="name">Places libres</div></td><td class="name">{{ stats.places_disponibles }}</td></tr>
+                    <tr>
+                        <td colspan="2">
+                            <div class="cap-bar {% if stats.taux_occupation_global > 80 %}high{% elif stats.taux_occupation_global > 60 %}mid{% endif %}">
+                                <span style="width: {{ stats.taux_occupation_global }}%"></span>
+                            </div>
+                            <div class="mat">Taux d'occupation {{ stats.taux_occupation_global|floatformat:1 }} %</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+        <div class="panel-box">
+            <h3>Centres par type</h3>
+            <div class="data-table-wrap" style="border:none;">
+            <table class="table data-table">
+                <tbody>
+                {% for label, count in stats.centres_par_type %}
+                    <tr><td><div class="name">{{ label }}</div></td><td class="name">{{ count }}</td></tr>
+                {% empty %}
+                    <tr><td class="empty-state">Aucun centre.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="dash-grid">
+        <div class="panel-box">
+            <h3>Centres les plus chargés</h3>
+            <div class="data-table-wrap" style="border:none;">
+            <table class="table data-table">
+                <tbody>
+                {% for centre in centres_plus_charges %}
+                <tr>
+                    <td>
+                        <div class="name">{{ centre.nom }}</div>
+                        <div class="mat">{{ centre.capacite_actuelle }}/{{ centre.capacite_max }}</div>
+                    </td>
+                    <td class="name">{{ centre.taux_occupation|floatformat:0 }} %</td>
+                </tr>
+                {% empty %}
+                <tr><td class="empty-state">Aucun centre</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+        <div class="panel-box">
+            <h3>Derniers administrateurs</h3>
+            <div class="data-table-wrap" style="border:none;">
+            <table class="table data-table">
+                <tbody>
+                {% for admin in derniers_admins %}
+                <tr>
+                    <td>
+                        <div class="name">{{ admin.utilisateur.get_full_name|default:admin.utilisateur.username }}</div>
+                        <div class="mat">{{ admin.centre.nom }} · {{ admin.poste }}</div>
+                    </td>
+                    <td class="mat">{{ admin.created_at|date:"d/m/Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td class="empty-state">Aucun admin récent</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel-box">
+        <h3>Activité récente des détenus</h3>
+        <div class="data-table-wrap" style="border:none;">
+            <table class="table data-table">
+                <thead>
+                    <tr>
+                        <th>Détenu</th>
+                        <th>Statut</th>
+                        <th>Centre</th>
+                        <th>Mise à jour</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for detenu in activite_recente %}
+                <tr>
+                    <td>
+                        <div class="name">{{ detenu.nom_complet }}</div>
+                        <div class="mat">{{ detenu.matricule }}</div>
+                    </td>
+                    <td>
+                        <span class="status-badge text-white
+                            {% if detenu.statut == 'INCARCERE' %}bg-danger
+                            {% elif detenu.statut == 'LIBERE' %}bg-success
+                            {% elif detenu.statut == 'TRANSFERE' %}bg-warning
+                            {% else %}bg-secondary{% endif %}">{{ detenu.get_statut_display }}</span>
+                    </td>
+                    <td>{{ detenu.centre.nom|default:"—" }}</td>
+                    <td class="mat">{{ detenu.updated_at|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'detenu_detail' detenu.id %}" class="btn btn-outline-primary btn-action"><i class="bi bi-eye"></i></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="empty-state">Aucune activité récente</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    var el = document.getElementById('dash-graphiques');
+    if (!el || typeof Chart === 'undefined') return;
+    var data = JSON.parse(el.textContent);
+    var common = {
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: '#12263a', font: { size: 12, family: 'Calibri, Segoe UI, sans-serif' } }
+            }
+        }
+    };
+    var ctxSexe = document.getElementById('chartSexe');
+    if (ctxSexe) {
+        new Chart(ctxSexe, {
+            type: 'doughnut',
+            data: {
+                labels: data.sexe.labels,
+                datasets: [{
+                    data: data.sexe.values,
+                    backgroundColor: ['#0066c7', '#ce1020'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '58%',
+                plugins: common.plugins
+            }
+        });
+    }
+    var ctxOcc = document.getElementById('chartOccupation');
+    if (ctxOcc) {
+        new Chart(ctxOcc, {
+            type: 'bar',
+            data: {
+                labels: data.occupation.labels,
+                datasets: [{
+                    label: 'Taux d\'occupation (%)',
+                    data: data.occupation.values,
+                    backgroundColor: '#0066c7',
+                    borderColor: '#f7d116',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: '#5b6b7c', callback: function (v) { return v + ' %'; } },
+                        grid: { color: '#e8eef4' }
+                    },
+                    y: {
+                        ticks: { color: '#12263a', font: { size: 10 } },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,286 @@
+{% extends 'personnel/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}{% if personnel %}Modifier le personnel{% else %}Enregistrer un nouveau membre du personnel{% endif %}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'personnel_list' %}" class="btn btn-outline-primary">
+    <i class="bi bi-arrow-left"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/form_styles.css' %}">
+<style>
+    .form-container {
+        padding: 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
+{% block content_personnel %}
+<div class="form-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="form-title"><i class="bi bi-person-plus"></i> {{ title }}</h1>
+        <a href="{% url 'personnel_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="form-card">
+        <form method="post" id="personnelForm" novalidate>
+            {% csrf_token %}
+            
+            <!-- Informations personnelles -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-person"></i> Informations Personnelles
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ form.nom.id_for_label }}" class="form-label">Nom *</label>
+                        {{ form.nom }}
+                        {% if form.nom.errors %}
+                        <div class="invalid-feedback">{{ form.nom.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Nom du personnel</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.prenom.id_for_label }}" class="form-label">Prénom *</label>
+                        {{ form.prenom }}
+                        {% if form.prenom.errors %}
+                        <div class="invalid-feedback">{{ form.prenom.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Prénom du personnel</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.telephone.id_for_label }}" class="form-label">Téléphone</label>
+                        {{ form.telephone }}
+                        {% if form.telephone.errors %}
+                        <div class="invalid-feedback">{{ form.telephone.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Téléphone du personnel</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Email du personnel</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.matricule.id_for_label }}" class="form-label">Matricule *</label>
+                        {{ form.matricule }}
+                        {% if form.matricule.errors %}
+                        <div class="invalid-feedback">{{ form.matricule.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Identifiant unique du personnel</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations professionnelles -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-briefcase"></i> Informations Professionnelles
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ form.type_personnel.id_for_label }}" class="form-label">Type *</label>
+                        {{ form.type_personnel }}
+                        {% if form.type_personnel.errors %}
+                        <div class="invalid-feedback">{{ form.type_personnel.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.statut.id_for_label }}" class="form-label">Statut</label>
+                        {{ form.statut }}
+                        {% if form.statut.errors %}
+                        <div class="invalid-feedback">{{ form.statut.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.date_embauche.id_for_label }}" class="form-label">Date d'embauche *</label>
+                        {{ form.date_embauche }}
+                        {% if form.date_embauche.errors %}
+                        <div class="invalid-feedback">{{ form.date_embauche.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.date_fin_contrat.id_for_label }}" class="form-label">Date de fin</label>
+                        {{ form.date_fin_contrat }}
+                        {% if form.date_fin_contrat.errors %}
+                        <div class="invalid-feedback">{{ form.date_fin_contrat.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Optionnel</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.salaire.id_for_label }}" class="form-label">Salaire ($)</label>
+                        {{ form.salaire }}
+                        {% if form.salaire.errors %}
+                        <div class="invalid-feedback">{{ form.salaire.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.heures_travail_semaine.id_for_label }}" class="form-label">Heures/semaine</label>
+                        {{ form.heures_travail_semaine }}
+                        {% if form.heures_travail_semaine.errors %}
+                        <div class="invalid-feedback">{{ form.heures_travail_semaine.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spécialités -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-award"></i> Qualifications
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ form.specialite.id_for_label }}" class="form-label">Spécialité</label>
+                        {{ form.specialite }}
+                        {% if form.specialite.errors %}
+                        <div class="invalid-feedback">{{ form.specialite.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.numero_ordre.id_for_label }}" class="form-label">Numéro d'ordre</label>
+                        {{ form.numero_ordre }}
+                        {% if form.numero_ordre.errors %}
+                        <div class="invalid-feedback">{{ form.numero_ordre.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Numéro d'ordre professionnel</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-buttons">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> {{ action }}
+                </button>
+                <a href="{% url 'personnel_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validation en temps réel
+    const form = document.getElementById('personnelForm');
+    const requiredFields = ['nom', 'prenom', 'matricule', 'type_personnel', 'date_embauche'];
+    
+    form.addEventListener('submit', function(e) {
+        let hasErrors = false;
+        let errorMessages = [];
+        
+        requiredFields.forEach(function(fieldName) {
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            const label = field.closest('.form-floating').querySelector('label').textContent;
+            
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                hasErrors = true;
+                errorMessages.push(`${label} est obligatoire`);
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        // Validation de la date d'embauche
+        const dateEmbaucheField = document.querySelector('[name="date_embauche"]');
+        const dateFinContratField = document.querySelector('[name="date_fin_contrat"]');
+        
+        if (dateEmbaucheField.value && dateFinContratField.value) {
+            const dateEmbauche = new Date(dateEmbaucheField.value);
+            const dateFin = new Date(dateFinContratField.value);
+            
+            if (dateFin <= dateEmbauche) {
+                dateFinContratField.classList.add('is-invalid');
+                hasErrors = true;
+                errorMessages.push('La date de fin de contrat doit être postérieure à la date d\'embauche');
+            }
+        }
+        
+        // Validation du salaire
+        const salaireField = document.querySelector('[name="salaire"]');
+        if (salaireField.value) {
+            const salaire = parseFloat(salaireField.value);
+            if (salaire < 0) {
+                salaireField.classList.add('is-invalid');
+                hasErrors = true;
+                errorMessages.push('Le salaire ne peut pas être négatif');
+            }
+        }
+        
+        // Validation des heures de travail
+        const heuresField = document.querySelector('[name="heures_travail_semaine"]');
+        if (heuresField.value) {
+            const heures = parseInt(heuresField.value);
+            if (heures < 1 || heures > 80) {
+                heuresField.classList.add('is-invalid');
+                hasErrors = true;
+                errorMessages.push('Les heures de travail doivent être entre 1 et 80 par semaine');
+            }
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+            alert('Veuillez corriger les erreurs suivantes :\n' + errorMessages.join('\n'));
+            return false;
+        }
+    });
+    
+    // Auto-formatage des champs numériques
+    const salaireField = document.querySelector('[name="salaire"]');
+    if (salaireField) {
+        salaireField.addEventListener('input', function() {
+            let value = parseFloat(this.value);
+            if (value < 0) this.value = 0;
+        });
+    }
+    
+    const heuresField = document.querySelector('[name="heures_travail_semaine"]');
+    if (heuresField) {
+        heuresField.addEventListener('input', function() {
+            let value = parseInt(this.value);
+            if (value < 1) this.value = 1;
+            if (value > 80) this.value = 80;
+        });
+    }
+});
+</script>
+{% endblock %}
+
+

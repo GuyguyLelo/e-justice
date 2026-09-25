@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Détections - e-Detenu{% endblock %}
+
+{% block content %}
+<div class="list-wrap">
+    <div class="list-head">
+        <h2><i class="bi bi-camera-video"></i> Détections faciales</h2>
+        <a href="{% url 'surveillance_detections_list' %}" class="btn btn-outline-secondary">Réinitialiser</a>
+    </div>
+    <div class="stats-strip cols-4">
+        <div class="stat-chip"><strong>{{ total_count }}</strong><span>Total</span></div>
+        <div class="stat-chip"><strong>{{ page_obj.paginator.count }}</strong><span>Filtrées</span></div>
+        <div class="stat-chip"><strong>{{ page_obj.number }}</strong><span>Page</span></div>
+        <div class="stat-chip"><strong>{{ cameras|length }}</strong><span>Caméras</span></div>
+    </div>
+    <form method="get" class="search-bar">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="search" value="{{ filters.search }}" placeholder="Détenu, caméra…">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="camera">
+                    <option value="">Caméra</option>
+                    {% for camera in cameras %}
+                    <option value="{{ camera.id }}" {% if filters.camera == camera.id|stringformat:"s" %}selected{% endif %}>{{ camera.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="statut">
+                    <option value="">Statut</option>
+                    <option value="identifie" {% if filters.statut == 'identifie' %}selected{% endif %}>Identifié</option>
+                    <option value="inconnu" {% if filters.statut == 'inconnu' %}selected{% endif %}>Inconnu</option>
+                    <option value="alerte" {% if filters.statut == 'alerte' %}selected{% endif %}>Alerte</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="form-control" name="date_debut" value="{{ filters.date_debut }}">
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="form-control" name="date_fin" value="{{ filters.date_fin }}">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">OK</button>
+            </div>
+        </div>
+    </form>
+    <div class="data-table-wrap">
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table data-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Date</th>
+                        <th>Caméra</th>
+                        <th>Personne</th>
+                        <th>Confiance</th>
+                        <th>Statut</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for detection in page_obj %}
+                    <tr>
+                        <td>
+                            {% if detection.image_detection %}
+                            <img src="{{ detection.image_publique_url }}" alt="" class="photo-sm">
+                            {% else %}
+                            <span class="photo-sm"><i class="bi bi-image"></i></span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="name">{{ detection.timestamp|date:"d/m/Y" }}</div>
+                            <div class="mat">{{ detection.timestamp|time:"H:i:s" }}</div>
+                        </td>
+                        <td>{{ detection.camera.nom|default:"—" }}</td>
+                        <td>
+                            {% if detection.detenu %}
+                            <div class="name">{{ detection.detenu.nom_complet }}</div>
+                            <div class="mat">{{ detection.detenu.matricule }}</div>
+                            {% else %}
+                            <span class="mat">Inconnu</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ detection.confiance|floatformat:1 }} %</td>
+                        <td>
+                            <span class="status-badge text-white
+                                {% if detection.est_alerte %}bg-danger
+                                {% elif detection.detenu %}bg-success
+                                {% else %}bg-warning{% endif %}">
+                                {% if detection.est_alerte %}Alerte{% elif detection.detenu %}Identifié{% else %}Inconnu{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'surveillance_detection_detail' detection.id %}" class="btn btn-outline-primary btn-action"><i class="bi bi-eye"></i></a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if page_obj.has_other_pages %}
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">‹</a></li>{% endif %}
+                <li class="page-item disabled"><span class="page-link">{{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">›</a></li>{% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">Aucune détection.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

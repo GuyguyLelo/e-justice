@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block title %}e-Justice — Plateforme nationale de justice · RDC{% endblock %}
+
+{% block extra_css %}
+<style>
+    html, body { height: 100%; overflow: hidden; }
+    body { display: flex; flex-direction: column; }
+    main {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .home-screen {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: 1fr auto;
+        overflow: hidden;
+        background: #e8eef5;
+    }
+    .home-grid {
+        display: grid;
+        grid-template-columns: minmax(280px, 0.95fr) 1.55fr;
+        min-height: 0;
+        overflow: hidden;
+    }
+    .intro {
+        background: #004a94;
+        color: #fff;
+        padding: 1.6rem 1.8rem 1.4rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border-right: 6px solid #f7d116;
+        position: relative;
+        overflow: hidden;
+    }
+    .intro::after {
+        content: "★";
+        position: absolute;
+        right: -0.4rem;
+        bottom: -1.2rem;
+        font-size: 9rem;
+        color: rgba(247, 209, 22, 0.12);
+        line-height: 1;
+        pointer-events: none;
+    }
+    .kicker {
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-size: 0.68rem;
+        color: #f7d116;
+        margin-bottom: 0.7rem;
+    }
+    .intro h1 {
+        font-size: 2.15rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin: 0 0 0.75rem;
+        line-height: 1.05;
+    }
+    .intro p {
+        font-size: 0.92rem;
+        line-height: 1.5;
+        color: rgba(255,255,255,0.92);
+        margin-bottom: 1.1rem;
+        max-width: 28rem;
+    }
+    .intro .btn-connexion {
+        margin-top: 0.15rem;
+    }
+    .pillars {
+        margin-top: 1.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        position: relative;
+        z-index: 1;
+    }
+    .pillar {
+        background: rgba(0, 102, 199, 0.35);
+        border-left: 3px solid #f7d116;
+        padding: 0.5rem 0.7rem;
+        font-size: 0.78rem;
+        line-height: 1.35;
+    }
+    .panel {
+        padding: 1.15rem 1.35rem 1rem;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .panel-title {
+        color: #004a94;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+        margin: 0 0 0.7rem;
+        padding-bottom: 0.35rem;
+        border-bottom: 3px solid #f7d116;
+        display: inline-block;
+    }
+    .modules {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        gap: 0.55rem;
+        flex: 1;
+        min-height: 0;
+    }
+    .module {
+        background: #fff;
+        border: 1px solid #d5dee8;
+        padding: 0.7rem 0.75rem;
+        min-height: 0;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    .module.live {
+        border-left: 4px solid #ce1020;
+        background: #fffaf8;
+    }
+    .module.live:hover {
+        outline: 2px solid #ce1020;
+    }
+    .module .statut {
+        float: right;
+        font-size: 0.58rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #7a8490;
+    }
+    .module.live .statut {
+        color: #ce1020;
+    }
+    .module i {
+        color: #0066c7;
+        font-size: 1.15rem;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+    .module .code {
+        font-size: 0.62rem;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: #0066c7;
+        font-weight: 700;
+        margin-bottom: 0.15rem;
+    }
+    .module h3 {
+        font-size: 0.88rem;
+        color: #003366;
+        margin: 0 0 0.25rem;
+        font-weight: 700;
+    }
+    .module p {
+        margin: 0;
+        font-size: 0.75rem;
+        color: #5b6b7c;
+        line-height: 1.35;
+    }
+    .home-footer {
+        background: #004a94;
+        color: rgba(255,255,255,0.88);
+        text-align: center;
+        padding: 0.42rem 1rem;
+        font-size: 0.72rem;
+        border-top: 3px solid #f7d116;
+    }
+    @media (max-width: 992px) {
+        html, body, main { overflow: auto; height: auto; }
+        .home-grid { grid-template-columns: 1fr; }
+        .modules { grid-template-columns: 1fr 1fr; grid-template-rows: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="home-screen">
+    <div class="home-grid">
+        <aside class="intro">
+            <div>
+                <div class="kicker">Ministère de la Justice · République Démocratique du Congo</div>
+                <h1>e-Justice</h1>
+                <p>
+                    Plateforme unique pour toute la chaîne judiciaire : de l’enquête au jugement,
+                    jusqu’à l’exécution des peines. <strong>e-Detenu</strong> est le premier module
+                    opérationnel ; les autres fonctions seront déployées progressivement.
+                </p>
+                {% if user.is_authenticated %}
+                <a class="btn-connexion" href="{% url 'dashboard' %}">
+                    <i class="bi bi-grid-3x3-gap-fill"></i> Accéder à l’espace de travail
+                </a>
+                {% else %}
+                <a class="btn-connexion" href="{% url 'login' %}">
+                    <i class="bi bi-shield-lock-fill"></i> Connexion sécurisée
+                </a>
+                {% endif %}
+            </div>
+            <div class="pillars">
+                <div class="pillar"><strong>Chaîne complète</strong><br>Police judiciaire, parquet, instruction, audience, décision, exécution.</div>
+                <div class="pillar"><strong>Une seule vérité</strong><br>Le dossier suit la personne, de la poursuite jusqu’à la détention.</div>
+                <div class="pillar"><strong>Gouvernance</strong><br>Accès par rôle, traçabilité et statistiques nationales.</div>
+            </div>
+        </aside>
+
+        <section class="panel">
+            <div class="panel-title">Grandes fonctions d’e-Justice</div>
+            <div class="modules">
+                {% for fn in fonctions %}
+                {% if fn.statut == 'opérationnel' %}
+                <a class="module live" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'login' %}{% endif %}">
+                {% else %}
+                <article class="module">
+                {% endif %}
+                    <span class="statut">{{ fn.statut }}</span>
+                    <i class="bi {{ fn.icone }}"></i>
+                    <div class="code">{{ fn.code }}</div>
+                    <h3>{{ fn.titre }}</h3>
+                    <p>{{ fn.texte }}</p>
+                {% if fn.statut == 'opérationnel' %}
+                </a>
+                {% else %}
+                </article>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+    <div class="home-footer">
+        République Démocratique du Congo · Ministère de la Justice · Plateforme e-Justice
+    </div>
+</div>
+{% endblock %}

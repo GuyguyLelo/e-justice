@@ -1,0 +1,417 @@
+{% extends 'surveillance/base.html' %}
+
+{% block title %}Test Reconnaissance Faciale{% endblock %}
+
+{% block page_title %}Test Reconnaissance Faciale{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">🎯 Test Reconnaissance Faciale</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'surveillance:dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques du système -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">👤 Profils Actifs</h5>
+                <h2 id="profils-count">-</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">🧠 Visages Chargés</h5>
+                <h2 id="visages-count">-</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">📊 Statut Système</h5>
+                <h2 id="system-status">-</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test de reconnaissance -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>📸 Upload Image pour Test</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="image-upload" class="form-label">Choisir une image</label>
+                    <input type="file" class="form-control" id="image-upload" accept="image/*">
+                </div>
+                <div class="mb-3">
+                    <label for="camera-select" class="form-label">Caméra (simulation)</label>
+                    <select class="form-select" id="camera-select">
+                        <option value="1">Caméra Entrée</option>
+                        <option value="2">Caméra Couloir</option>
+                        <option value="3">Caméra Cour</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="testRecognition()">
+                    <i class="fas fa-search"></i> Lancer la reconnaissance
+                </button>
+                <button class="btn btn-secondary ms-2" onclick="clearResults()">
+                    <i class="fas fa-times"></i> Effacer
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>🖼️ Aperçu</h5>
+            </div>
+            <div class="card-body">
+                <div id="image-preview" class="text-center">
+                    <img id="preview-img" src="" alt="Aperçu" style="max-width: 100%; display: none;">
+                    <div id="placeholder" class="text-muted">
+                        <i class="fas fa-image fa-3x mb-2"></i>
+                        <p>Aucune image sélectionnée</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Résultats -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>📊 Résultats de Détection</h5>
+            </div>
+            <div class="card-body">
+                <div id="results">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-search fa-2x mb-2"></i>
+                        <p>Aucun résultat. Uploadez une image et lancez la reconnaissance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions système -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>⚙️ Actions Système</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <button class="btn btn-info w-100" onclick="testSystem()">
+                            <i class="fas fa-vial"></i> Tester le système
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-success w-100" onclick="initializeSystem()">
+                            <i class="fas fa-play"></i> Initialiser système
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-warning w-100" onclick="loadTestImage()">
+                            <i class="fas fa-download"></i> Charger image test
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Détenu test info -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5>🧪 Détenu Test Disponible</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <p><strong>Nom:</strong> Jean DUPONT</p>
+                        <p><strong>Matricule:</strong> TEST001</p>
+                        <p><strong>Centre:</strong> Centre Test</p>
+                        <p><strong>Statut:</strong> <span class="badge bg-success">Profil facial actif</span></p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <img src="/media/detenus/photos/detenu_TEST001_face.jpg" 
+                             alt="Détenu test" 
+                             class="img-fluid rounded" 
+                             style="max-height: 150px; border: 2px solid #007bff;">
+                        <p class="mt-2"><small>Image de référence</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentImageData = null;
+
+// Charger les statistiques au démarrage
+document.addEventListener('DOMContentLoaded', function() {
+    loadSystemStats();
+});
+
+function loadSystemStats() {
+    fetch('/surveillance/api/tester-reconnaissance/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('profils-count').textContent = data.statistiques.total_profils;
+                document.getElementById('visages-count').textContent = data.statistiques.visages_charges;
+                document.getElementById('system-status').textContent = data.systeme_pret ? '✅ Prêt' : '❌ Erreur';
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            document.getElementById('system-status').textContent = '❌ Erreur';
+        });
+}
+
+function testSystem() {
+    loadSystemStats();
+    showNotification('Système testé avec succès !', 'success');
+}
+
+function initializeSystem() {
+    fetch('/surveillance/api/initialiser-systeme/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(`Système initialisé: ${data.profils_crees} profils créés`, 'success');
+                loadSystemStats();
+            } else {
+                showNotification('Erreur: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('Erreur lors de l\'initialisation', 'danger');
+        });
+}
+
+function loadTestImage() {
+    // Créer une image test similaire à celle du détenu
+    const canvas = document.createElement('canvas');
+    canvas.width = 300;
+    canvas.height = 300;
+    const ctx = canvas.getContext('2d');
+    
+    // Fond bleu
+    ctx.fillStyle = '#6496c8';
+    ctx.fillRect(0, 0, 300, 300);
+    
+    // Visage simple
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(150, 120, 40, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Yeux
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    ctx.arc(135, 110, 5, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(165, 110, 5, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Nez
+    ctx.beginPath();
+    ctx.arc(150, 130, 8, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Bouche
+    ctx.beginPath();
+    ctx.ellipse(150, 150, 15, 10, 0, 0, Math.PI);
+    ctx.stroke();
+    
+    // Convertir en base64
+    currentImageData = canvas.toDataURL('image/jpeg');
+    
+    // Afficher l'aperçu
+    document.getElementById('preview-img').src = currentImageData;
+    document.getElementById('preview-img').style.display = 'block';
+    document.getElementById('placeholder').style.display = 'none';
+    
+    showNotification('Image test chargée avec succès !', 'info');
+}
+
+document.getElementById('image-upload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            currentImageData = e.target.result;
+            document.getElementById('preview-img').src = currentImageData;
+            document.getElementById('preview-img').style.display = 'block';
+            document.getElementById('placeholder').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function testRecognition() {
+    if (!currentImageData) {
+        showNotification('Veuillez d\'abord sélectionner une image', 'warning');
+        return;
+    }
+    
+    const cameraId = document.getElementById('camera-select').value;
+    
+    const data = {
+        image: currentImageData,
+        camera_id: cameraId
+    };
+    
+    showNotification('Analyse en cours...', 'info');
+    
+    fetch('/surveillance/api/detecter-visage/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayResults(data.detections);
+            showNotification(`${data.total_faces} visage(s) détecté(s)`, 'success');
+        } else {
+            showNotification('Erreur: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        showNotification('Erreur lors de la reconnaissance', 'danger');
+    });
+}
+
+function displayResults(detections) {
+    const resultsDiv = document.getElementById('results');
+    
+    if (detections.length === 0) {
+        resultsDiv.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-search fa-2x mb-2"></i>
+                <p>Aucun visage détecté dans l'image</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="row">';
+    
+    detections.forEach((detection, index) => {
+        const alertClass = detection.is_alert ? 'border-danger' : 'border-success';
+        const badgeClass = detection.is_alert ? 'bg-danger' : 'bg-success';
+        const iconClass = detection.is_alert ? 'fa-exclamation-triangle' : 'fa-user-check';
+        
+        html += `
+            <div class="col-md-6 mb-3">
+                <div class="card ${alertClass}">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fas ${iconClass}"></i> Détection ${index + 1}
+                        </h6>
+                        <span class="badge ${badgeClass}">
+                            ${detection.confiance.toFixed(1)}% confiance
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Nom:</strong> ${detection.name}</p>
+                        <p><strong>ID Détenu:</strong> ${detection.detenu_id || 'Non identifié'}</p>
+                        <p><strong>Alerte:</strong> 
+                            <span class="badge ${badgeClass}">
+                                ${detection.is_alert ? 'Oui' : 'Non'}
+                            </span>
+                        </p>
+                        ${detection.detenu_id ? `
+                        <a href="/detenus/${detection.detenu_id}/" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> Voir détenu
+                        </a>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    resultsDiv.innerHTML = html;
+}
+
+function clearResults() {
+    document.getElementById('results').innerHTML = `
+        <div class="text-center text-muted">
+            <i class="fas fa-search fa-2x mb-2"></i>
+            <p>Aucun résultat. Uploadez une image et lancez la reconnaissance.</p>
+        </div>
+    `;
+    document.getElementById('preview-img').style.display = 'none';
+    document.getElementById('placeholder').style.display = 'block';
+    document.getElementById('image-upload').value = '';
+    currentImageData = null;
+}
+
+function showNotification(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

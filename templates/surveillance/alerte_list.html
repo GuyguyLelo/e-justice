@@ -1,0 +1,202 @@
+{% extends 'surveillance/base.html' %}
+
+{% block title %}Alertes de Surveillance{% endblock %}
+
+{% block page_title %}Alertes de Surveillance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Alertes de Surveillance</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'surveillance:dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="statut" class="form-label">Statut</label>
+                <select class="form-select" id="statut" name="statut">
+                    <option value="">Tous les statuts</option>
+                    <option value="OUVERTE" {% if request.GET.statut == 'OUVERTE' %}selected{% endif %}>Ouvertes</option>
+                    <option value="EN_COURS" {% if request.GET.statut == 'EN_COURS' %}selected{% endif %}>En cours</option>
+                    <option value="RESOLUE" {% if request.GET.statut == 'RESOLUE' %}selected{% endif %}>Résolues</option>
+                    <option value="FAUSSE_ALERTE" {% if request.GET.statut == 'FAUSSE_ALERTE' %}selected{% endif %}>Fausses alertes</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="niveau" class="form-label">Niveau</label>
+                <select class="form-select" id="niveau" name="niveau">
+                    <option value="">Tous les niveaux</option>
+                    <option value="INFO" {% if request.GET.niveau == 'INFO' %}selected{% endif %}>Information</option>
+                    <option value="ATTENTION" {% if request.GET.niveau == 'ATTENTION' %}selected{% endif %}>Attention</option>
+                    <option value="WARNING" {% if request.GET.niveau == 'WARNING' %}selected{% endif %}>Avertissement</option>
+                    <option value="CRITIQUE" {% if request.GET.niveau == 'CRITIQUE' %}selected{% endif %}>Critique</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="type" class="form-label">Type</label>
+                <select class="form-select" id="type" name="type">
+                    <option value="">Tous les types</option>
+                    <option value="DETECTION_INCONNUE" {% if request.GET.type == 'DETECTION_INCONNUE' %}selected{% endif %}>Détection inconnue</option>
+                    <option value="DETENU_INTERDIT" {% if request.GET.type == 'DETENU_INTERDIT' %}selected{% endif %}>Détenu zone interdite</option>
+                    <option value="DETECTION_MULTIPLE" {% if request.GET.type == 'DETECTION_MULTIPLE' %}selected{% endif %}>Détection multiple</option>
+                    <option value="CAMERA_HORS_SERVICE" {% if request.GET.type == 'CAMERA_HORS_SERVICE' %}selected{% endif %}>Caméra hors service</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filtrer
+                    </button>
+                    <a href="{% url 'surveillance:alerte_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Réinitialiser
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des alertes -->
+<div class="row">
+    {% for alerte in alertes %}
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100 alerte-item {{ alerte.niveau|lower }}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">{{ alerte.titre }}</h6>
+                <div>
+                    <span class="badge bg-{{ alerte.niveau|lower }}">
+                        {{ alerte.get_niveau_display }}
+                    </span>
+                    <span class="badge bg-{{ alerte.statut|lower }}">
+                        {{ alerte.get_statut_display }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Type</small>
+                        <p class="mb-1">{{ alerte.get_type_alerte_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Date</small>
+                        <p class="mb-1">{{ alerte.date_creation|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Caméra</small>
+                        <p class="mb-1">
+                            {% if alerte.camera %}
+                                {{ alerte.camera.nom }}
+                            {% else %}
+                                Non spécifiée
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Détenu</small>
+                        <p class="mb-1">
+                            {% if alerte.detenu %}
+                                {{ alerte.detenu.nom }} {{ alerte.detenu.prenom }}
+                            {% else %}
+                                Non spécifié
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <small class="text-muted">Description</small>
+                        <p class="mb-1">{{ alerte.description|truncatechars:100 }}</p>
+                    </div>
+                </div>
+                {% if alerte.assigne_a %}
+                <div class="row">
+                    <div class="col-12">
+                        <small class="text-muted">Assignée à</small>
+                        <p class="mb-1">{{ alerte.assigne_a.get_full_name|default:alerte.assigne_a.username }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <a href="{% url 'surveillance:alerte_detail' alerte.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-eye"></i> Détails
+                    </a>
+                    {% if alerte.est_ouverte %}
+                    <a href="{% url 'surveillance:alerte_detail' alerte.id %}" class="btn btn-sm btn-outline-warning">
+                        <i class="fas fa-user-plus"></i> Assigner
+                    </a>
+                    <a href="{% url 'surveillance:alerte_detail' alerte.id %}" class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-check"></i> Résoudre
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-exclamation-triangle fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Aucune alerte trouvée</h4>
+            <p class="text-muted">
+                {% if request.GET.statut or request.GET.niveau or request.GET.type %}
+                Essayez de modifier les filtres.
+                {% else %}
+                Aucune alerte n'a été générée.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination des alertes">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Début</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Précédent</a>
+        </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active">
+            <span class="page-link">{{ num }}</span>
+        </li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">{{ num }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Suivant</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Fin</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

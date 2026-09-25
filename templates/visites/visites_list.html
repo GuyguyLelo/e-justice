@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}Liste des Visites - e-Detenu{% endblock %}
+
+{% block extra_css %}
+<style>
+    .list-wrap { padding: 0.65rem 0.9rem 1rem; }
+    .list-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.55rem;
+    }
+    .list-head h2 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #003366;
+    }
+    .list-head .btn { border-radius: 0; font-size: 0.75rem; padding: 0.28rem 0.65rem; }
+    .stats-strip {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.35rem;
+        margin-bottom: 0.55rem;
+    }
+    .stat-chip {
+        background: #004a94;
+        color: #fff;
+        text-align: center;
+        padding: 0.28rem 0.3rem;
+        border-left: 3px solid #f7d116;
+    }
+    .stat-chip strong { display: block; font-size: 0.95rem; line-height: 1.1; }
+    .stat-chip span { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.9; }
+    .stat-chip.inc { background: #ce1020; }
+    .stat-chip.lib { background: #1b7a3d; }
+    .stat-chip.tr { background: #c9a227; color: #12263a; }
+    .stat-chip.ev { background: #5b6b7c; }
+    .search-bar {
+        background: #fff;
+        border: 1px solid #d5dee8;
+        padding: 0.4rem 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .search-bar .form-control,
+    .search-bar .form-select,
+    .search-bar .btn {
+        border-radius: 0;
+        height: 2rem;
+        font-size: 0.8rem;
+        padding: 0.2rem 0.45rem;
+    }
+    .detenus-table-wrap { background: #fff; border: 1px solid #d5dee8; }
+    .detenus-table { margin: 0; font-size: 0.8rem; }
+    .detenus-table thead th {
+        background: #0066c7;
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.38rem 0.5rem;
+        white-space: nowrap;
+        border: none;
+    }
+    .detenus-table tbody td {
+        padding: 0.28rem 0.5rem;
+        vertical-align: middle;
+        border-color: #e8eef4;
+    }
+    .detenus-table tbody tr:hover { background: #f4f8fc; }
+    .detenus-table .name { font-weight: 700; color: #003366; }
+    .detenus-table .mat { color: #5b6b7c; font-size: 0.72rem; }
+    .photo-sm {
+        width: 32px; height: 32px;
+        background: #0066c7; color: #fff;
+        font-size: 0.65rem; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center;
+        border: 1px solid #d5dee8;
+    }
+    .status-badge {
+        font-size: 0.65rem;
+        padding: 0.12rem 0.4rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .btn-action { padding: 0.12rem 0.32rem; font-size: 0.75rem; border-radius: 0; line-height: 1; }
+    .action-buttons { display: flex; gap: 0.2rem; }
+    .pagination { justify-content: flex-end; margin: 0.4rem 0.5rem 0.45rem; }
+    .pagination .page-link { border-radius: 0; font-size: 0.75rem; padding: 0.2rem 0.45rem; }
+    .empty-state { text-align: center; padding: 1.5rem; color: #6c757d; }
+    @media (max-width: 992px) { .stats-strip { grid-template-columns: repeat(3, 1fr); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="list-wrap">
+    {% csrf_token %}
+    <div class="list-head">
+        <h2><i class="bi bi-calendar3"></i> Liste des visites</h2>
+        <div>
+            <a href="{% url 'visiteurs_list' %}" class="btn btn-outline-secondary">Visiteurs</a>
+            {% if request.user.can_edit_visites %}
+            <a href="{% url 'visite_create' %}" class="btn btn-primary"><i class="bi bi-plus"></i> Nouvelle</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="stats-strip">
+        <div class="stat-chip"><strong>{{ total_visites }}</strong><span>Total</span></div>
+        <div class="stat-chip inc"><strong>{{ page_obj.object_list|length }}</strong><span>Affichées</span></div>
+        <div class="stat-chip tr"><strong>{{ nb_programmees }}</strong><span>Programmées</span></div>
+        <div class="stat-chip"><strong>{{ nb_en_cours }}</strong><span>En cours</span></div>
+        <div class="stat-chip lib"><strong>{{ nb_terminees }}</strong><span>Terminées</span></div>
+        <div class="stat-chip ev"><strong>{{ nb_annulees }}</strong><span>Annulées</span></div>
+    </div>
+
+    <form method="get" class="search-bar">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="text" class="form-control" id="search" name="search"
+                       value="{{ request.GET.search }}" placeholder="Visiteur, détenu, matricule…">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="date" name="date" onchange="toggleDatePicker()">
+                    <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Aujourd'hui</option>
+                    <option value="week" {% if date_filter == 'week' %}selected{% endif %}>Cette semaine</option>
+                    <option value="month" {% if date_filter == 'month' %}selected{% endif %}>Ce mois</option>
+                    <option value="custom" {% if date_filter == 'custom' %}selected{% endif %}>Date</option>
+                    <option value="all" {% if date_filter == 'all' %}selected{% endif %}>Toutes</option>
+                </select>
+            </div>
+            <div class="col-md-2" id="custom-date-container" style="display:{% if date_filter == 'custom' %}block{% else %}none{% endif %};">
+                <input type="date" class="form-control" id="custom_date" name="custom_date"
+                       value="{% if custom_date %}{{ custom_date }}{% else %}{{ today }}{% endif %}">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="statut" name="statut">
+                    <option value="">Statut</option>
+                    {% for value, label in statuts %}
+                    <option value="{{ value }}" {% if request.GET.statut == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="detenu" name="detenu">
+                    <option value="">Détenu</option>
+                    {% for detenu in detenus %}
+                    <option value="{{ detenu.id }}" {% if request.GET.detenu == detenu.id|stringformat:"s" %}selected{% endif %}>{{ detenu.nom }} {{ detenu.prenom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i></button>
+            </div>
+        </div>
+    </form>
+
+    {% if page_obj.object_list %}
+    <div class="detenus-table-wrap">
+        <div class="table-responsive">
+            <table class="table detenus-table align-middle">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Visiteur</th>
+                        <th>Détenu</th>
+                        <th>Date</th>
+                        <th>Durée</th>
+                        <th>Statut</th>
+                        <th>Agent</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for visite in page_obj %}
+                    <tr>
+                        <td><span class="photo-sm">{{ visite.visiteur.nom|first|upper }}{{ visite.visiteur.prenom|first|upper }}</span></td>
+                        <td>
+                            <div class="name">{{ visite.visiteur.nom_complet }}</div>
+                            <div class="mat">{{ visite.visiteur.get_type_visiteur_display }}</div>
+                        </td>
+                        <td>
+                            <div class="name">{{ visite.detenu.nom_complet }}</div>
+                            <div class="mat">{{ visite.detenu.matricule }}</div>
+                        </td>
+                        <td>
+                            {{ visite.date_visite|date:"d/m/Y" }}
+                            <div class="mat">{{ visite.date_visite|time:"H:i" }}</div>
+                        </td>
+                        <td>{{ visite.duree_minutes }} min</td>
+                        <td>
+                            <span class="status-badge text-white
+                                {% if visite.statut == 'PROGRAMMEE' %}bg-warning
+                                {% elif visite.statut == 'EN_COURS' %}bg-primary
+                                {% elif visite.statut == 'TERMINEE' %}bg-success
+                                {% elif visite.statut == 'ANNULEE' %}bg-secondary
+                                {% elif visite.statut == 'REFUSEE' %}bg-danger
+                                {% endif %}">{{ visite.get_statut_display }}</span>
+                        </td>
+                        <td>{{ visite.agent_controle.get_full_name|default:"—" }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'visite_detail' visite.id %}" class="btn btn-outline-primary btn-action" title="Voir"><i class="bi bi-eye"></i></a>
+                                {% if request.user.can_edit_visites %}
+                                <a href="{% url 'visite_edit' visite.id %}" class="btn btn-outline-secondary btn-action" title="Modifier"><i class="bi bi-pencil"></i></a>
+                                {% if visite.statut == 'PROGRAMMEE' %}
+                                <button type="button" class="btn btn-outline-success btn-action" title="Commencer" onclick="actionVisite({{ visite.id }}, 'commencer')"><i class="bi bi-play"></i></button>
+                                {% elif visite.statut == 'EN_COURS' %}
+                                <button type="button" class="btn btn-outline-warning btn-action" title="Terminer" onclick="actionVisite({{ visite.id }}, 'terminer')"><i class="bi bi-stop"></i></button>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if page_obj.has_other_pages %}
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.detenu %}&detenu={{ request.GET.detenu }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.custom_date %}&custom_date={{ request.GET.custom_date }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.detenu %}&detenu={{ request.GET.detenu }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.custom_date %}&custom_date={{ request.GET.custom_date }}{% endif %}"><i class="bi bi-chevron-left"></i></a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.detenu %}&detenu={{ request.GET.detenu }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.custom_date %}&custom_date={{ request.GET.custom_date }}{% endif %}"><i class="bi bi-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.statut %}&statut={{ request.GET.statut }}{% endif %}{% if request.GET.detenu %}&detenu={{ request.GET.detenu }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.custom_date %}&custom_date={{ request.GET.custom_date }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state detenus-table-wrap">
+        <p class="mb-2">Aucune visite correspondant aux critères.</p>
+        <a href="{% url 'visite_create' %}" class="btn btn-primary btn-sm">Nouvelle visite</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDatePicker() {
+    const dateSelect = document.getElementById('date');
+    const customDateContainer = document.getElementById('custom-date-container');
+    if (dateSelect && customDateContainer) {
+        customDateContainer.style.display = dateSelect.value === 'custom' ? 'block' : 'none';
+    }
+}
+function actionVisite(visiteId, action) {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fetch('/api/visites/' + visiteId + '/action/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': token },
+        body: JSON.stringify({ action: action })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) location.reload();
+        else alert('Erreur: ' + data.message);
+    })
+    .catch(function() { alert('Une erreur est survenue'); });
+}
+document.addEventListener('DOMContentLoaded', toggleDatePicker);
+</script>
+{% endblock %}

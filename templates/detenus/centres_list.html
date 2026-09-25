@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - e-Detenu{% endblock %}
+
+{% block content %}
+<div class="list-wrap">
+    <div class="list-head">
+        <h2><i class="bi bi-building"></i> Centres pénitenciers</h2>
+        <div class="d-flex gap-1">
+            <a href="{% url 'dashboard_central' %}" class="btn btn-outline-secondary">Tableau de bord</a>
+            {% if request.user.can_create_centres %}
+            <a href="{% url 'centre_create' %}" class="btn btn-primary"><i class="bi bi-plus"></i> Nouveau</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="stats-strip cols-4">
+        <div class="stat-chip"><strong>{{ nb_centres }}</strong><span>Total</span></div>
+        <div class="stat-chip lib"><strong>{{ nb_actifs }}</strong><span>Actifs</span></div>
+        <div class="stat-chip ev"><strong>{{ nb_inactifs }}</strong><span>Inactifs</span></div>
+        <div class="stat-chip"><strong>{{ provinces|length }}</strong><span>Provinces</span></div>
+    </div>
+    <form method="get" class="search-bar">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <select name="province" class="form-select">
+                    <option value="">Toutes les provinces</option>
+                    {% for p in provinces %}
+                    <option value="{{ p }}" {% if province == p %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="type_centre" class="form-select">
+                    <option value="">Tous les types</option>
+                    {% for type in centres_types %}
+                    <option value="{{ type.0 }}" {% if type_centre == type.0 %}selected{% endif %}>{{ type.1 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="statut" class="form-select">
+                    <option value="">Tous les statuts</option>
+                    <option value="actif" {% if statut == 'actif' %}selected{% endif %}>Actifs</option>
+                    <option value="inactif" {% if statut == 'inactif' %}selected{% endif %}>Inactifs</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-1">
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+                <a href="{% url 'centres_list' %}" class="btn btn-outline-secondary">X</a>
+            </div>
+        </div>
+    </form>
+    <div class="data-table-wrap">
+        {% if centres %}
+        <div class="table-responsive">
+            <table class="table data-table">
+                <thead>
+                    <tr>
+                        <th>Centre</th>
+                        <th>Localisation</th>
+                        <th>Type</th>
+                        <th>Occupation</th>
+                        <th>Statut</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for centre in centres %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                {% with cover=centre.photo_couverture %}
+                                {% if cover %}
+                                <img src="{{ cover.url }}" alt="" style="width:28px;height:22px;object-fit:cover;border:1px solid #d5dee8;">
+                                {% endif %}
+                                {% endwith %}
+                                <div>
+                                    <div class="name">{{ centre.nom }}</div>
+                                    <div class="mat">{{ centre.code }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="name">{{ centre.ville|default:"—" }}</div>
+                            <div class="mat">{{ centre.province }}</div>
+                        </td>
+                        <td>{{ centre.get_type_centre_display }}</td>
+                        <td>
+                            {{ centre.capacite_actuelle }}/{{ centre.capacite_max }}
+                            <div class="mat">{{ centre.taux_occupation|floatformat:0 }} %</div>
+                        </td>
+                        <td>
+                            <span class="status-badge text-white {% if centre.statut %}bg-success{% else %}bg-secondary{% endif %}">{% if centre.statut %}Actif{% else %}Inactif{% endif %}</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'centre_dashboard' centre.id %}" class="btn btn-outline-primary btn-action" title="Détail"><i class="bi bi-eye"></i></a>
+                                {% if request.user.can_edit_centre_info %}
+                                <a href="{% url 'centre_edit' centre.id %}" class="btn btn-outline-primary btn-action" title="Modifier"><i class="bi bi-pencil"></i></a>
+                                {% endif %}
+                                <a href="{% url 'centre_detenus_list' centre.id %}" class="btn btn-outline-secondary btn-action" title="Détenus"><i class="bi bi-people"></i></a>
+                                {% if request.user.role != 'ADMIN_CENTRAL' %}
+                                <a href="{% url 'generer_liste_detenus_centre' centre.id %}" class="btn btn-outline-warning btn-action" title="PDF"><i class="bi bi-file-pdf"></i></a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">Aucun centre trouvé.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

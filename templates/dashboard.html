@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord - e-Detenu{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stats-card .card-body {
+        padding: 0;
+    }
+    
+    .stats-card h3 {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stats-card p {
+        margin-bottom: 0;
+        opacity: 0.9;
+    }
+    
+    .stats-card .icon {
+        font-size: 3rem;
+        opacity: 0.3;
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
+    .welcome-card {
+        background: #0066c7;
+        color: white;
+        border-radius: 0;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-bottom: 4px solid #f7d116;
+    }
+    
+    .quick-actions {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .action-btn {
+        background: #0066c7;
+        color: white;
+        border: none;
+        border-radius: 0;
+        padding: 1rem;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .action-btn:hover {
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .action-btn i {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .recent-activity {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .activity-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-item .icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+    }
+    
+    .activity-item .icon.detenu {
+        background: linear-gradient(135deg, var(--warning-color), #f1c40f);
+        color: white;
+    }
+    
+    .activity-item .icon.personnel {
+        background: linear-gradient(135deg, var(--secondary-color), #3498db);
+        color: white;
+    }
+    
+    .activity-item .icon.visite {
+        background: linear-gradient(135deg, var(--success-color), #27ae60);
+        color: white;
+    }
+    
+    .activity-item .icon.soins {
+        background: linear-gradient(135deg, var(--danger-color), #e74c3c);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de bienvenue -->
+    <div class="welcome-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="bi bi-house-heart"></i> Bienvenue, {{ stats.user.get_full_name }} !
+                </h1>
+                <p class="mb-0">
+                    Vous êtes connecté en tant que <strong>{{ stats.role }}</strong>.
+                    <br>
+                    <small>Dernière connexion : {{ stats.user.last_login|date:"d/m/Y à H:i" }}</small>
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <i class="bi bi-shield-check" style="font-size: 4rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card position-relative">
+                <div class="card-body">
+                    <h3>{{ stats.total_detenus }}</h3>
+                    <p><i class="bi bi-person-badge"></i> Détenus</p>
+                </div>
+                <i class="bi bi-person-badge icon"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card position-relative" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                <div class="card-body">
+                    <h3>{{ stats.total_personnel }}</h3>
+                    <p><i class="bi bi-people"></i> Personnel</p>
+                </div>
+                <i class="bi bi-people icon"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card position-relative" style="background: linear-gradient(135deg, #f39c12, #f1c40f);">
+                <div class="card-body">
+                    <h3>{{ stats.total_visites }}</h3>
+                    <p><i class="bi bi-calendar-check"></i> Visites</p>
+                </div>
+                <i class="bi bi-calendar-check icon"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card position-relative" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                <div class="card-body">
+                    <h3>{{ stats.total_consultations }}</h3>
+                    <p><i class="bi bi-heart-pulse"></i> Consultations</p>
+                </div>
+                <i class="bi bi-heart-pulse icon"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Actions rapides -->
+        <div class="col-md-4">
+            <div class="quick-actions">
+                <h5 class="mb-3">
+                    <i class="bi bi-lightning"></i> Actions rapides
+                </h5>
+                
+                {% if stats.user.role == 'ADMIN' or stats.user.role == 'DIRECTEUR' %}
+                <a href="{% url 'detenu_create' %}" class="action-btn">
+                    <i class="bi bi-person-plus"></i>
+                    Nouveau détenu
+                </a>
+                
+                <a href="{% url 'detenus_list' %}" class="action-btn">
+                    <i class="bi bi-person-badge"></i>
+                    Gérer les détenus
+                </a>
+                
+                <a href="{% url 'surveillance:dashboard' %}" class="action-btn" style="background: linear-gradient(135deg, #8e44ad, #9b59b6);">
+                    <i class="bi bi-shield-check"></i>
+                    Surveillance
+                </a>
+                
+                <a href="/admin/personnel/personnel/add/" class="action-btn">
+                    <i class="bi bi-person-gear"></i>
+                    Nouveau personnel
+                </a>
+                
+                <a href="/admin/visites/visite/add/" class="action-btn">
+                    <i class="bi bi-calendar-plus"></i>
+                    Nouvelle visite
+                </a>
+                {% endif %}
+                
+                {% if stats.user.role == 'MEDECIN' %}
+                <a href="/admin/soins/consultation/add/" class="action-btn">
+                    <i class="bi bi-heart-pulse"></i>
+                    Nouvelle consultation
+                </a>
+                {% endif %}
+                
+                <a href="{% url 'surveillance:dashboard' %}" class="action-btn" style="background: linear-gradient(135deg, #8e44ad, #9b59b6);">
+                    <i class="bi bi-shield-check"></i>
+                    Surveillance
+                </a>
+                
+                <a href="/admin/" class="action-btn">
+                    <i class="bi bi-gear"></i>
+                    Administration
+                </a>
+            </div>
+        </div>
+        
+        <!-- Activité récente -->
+        <div class="col-md-8">
+            <div class="recent-activity">
+                <h5 class="mb-3">
+                    <i class="bi bi-clock-history"></i> Activité récente
+                </h5>
+                
+                <div class="activity-item">
+                    <div class="d-flex align-items-center">
+                        <div class="icon detenu">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Nouveau détenu enregistré</h6>
+                            <p class="text-muted mb-0">Jean Mukamba - Cellule A1</p>
+                            <small class="text-muted">Il y a 2 heures</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="d-flex align-items-center">
+                        <div class="icon visite">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Visite programmée</h6>
+                            <p class="text-muted mb-0">Marie Kabila - Détenu: Jean Mukamba</p>
+                            <small class="text-muted">Il y a 4 heures</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="d-flex align-items-center">
+                        <div class="icon soins">
+                            <i class="bi bi-heart-pulse"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Consultation médicale</h6>
+                            <p class="text-muted mb-0">Dr. Mbuyi - Détenu: Pierre Kabila</p>
+                            <small class="text-muted">Il y a 6 heures</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="d-flex align-items-center">
+                        <div class="icon personnel">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Nouveau personnel</h6>
+                            <p class="text-muted mb-0">Agent de sécurité - Pierre Mbuyi</p>
+                            <small class="text-muted">Hier</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Animation des cartes de statistiques
+    $('.stats-card').each(function(index) {
+        $(this).hide().delay(index * 200).fadeIn(600);
+    });
+    
+    // Animation des actions rapides
+    $('.action-btn').hover(
+        function() {
+            $(this).css('transform', 'translateY(-5px)');
+        },
+        function() {
+            $(this).css('transform', 'translateY(0)');
+        }
+    );
+    
+    // Mise à jour en temps réel des statistiques (simulation)
+    setInterval(function() {
+        // Ici vous pouvez ajouter du code pour mettre à jour les statistiques
+        // via des appels AJAX
+    }, 30000); // Toutes les 30 secondes
+});
+</script>
+{% endblock %}

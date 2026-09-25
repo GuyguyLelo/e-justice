@@ -1,0 +1,425 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord - e-Detenu{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .stats-card h4 {
+        font-size: 1.75rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stats-card p {
+        margin-bottom: 0;
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+    
+    .stats-card .icon {
+        font-size: 2rem;
+        opacity: 0.3;
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
+    .welcome-card {
+        background: linear-gradient(135deg, var(--success-color), #2ecc71);
+        color: white;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .welcome-card h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .welcome-card p {
+        margin-bottom: 0;
+        opacity: 0.9;
+    }
+    
+    .quick-actions {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .quick-actions h3 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+    }
+    
+    .action-btn {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        margin: 0.25rem;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+    
+    .action-btn:hover {
+        background: var(--secondary-color);
+        color: white;
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+    
+    .recent-activity {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .recent-activity h3 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+    }
+    
+    .activity-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0.75rem;
+        font-size: 1rem;
+    }
+    
+    .activity-content {
+        flex: 1;
+    }
+    
+    .activity-content h6 {
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+    }
+    
+    .activity-content p {
+        margin-bottom: 0;
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    .activity-time {
+        font-size: 0.75rem;
+        color: #999;
+    }
+    
+    .compact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .compact-card {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+    }
+    
+    .compact-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .compact-card h5 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+    }
+    
+    .compact-card p {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin: 0.125rem;
+    }
+    
+    .status-programmee { background: #fff3cd; color: #856404; }
+    .status-en-cours { background: #d1ecf1; color: #0c5460; }
+    .status-terminee { background: #d4edda; color: #155724; }
+    .status-annulee { background: #f8d7da; color: #721c24; }
+    
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+    
+    .metric-label {
+        font-size: 0.8rem;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête compact -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="welcome-card">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h2>Bienvenue, {{ user.get_full_name|default:user.username }} !</h2>
+                        <p>Tableau de bord du système e-Detenu - {{ "now"|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="d-flex justify-content-end">
+                            <div class="me-3">
+                                <div class="metric-value">{{ "now"|date:"H:i" }}</div>
+                                <div class="metric-label">Heure actuelle</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques principales -->
+    <div class="row mb-3">
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card position-relative">
+                <div class="icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h4>{{ total_detenus|default:0 }}</h4>
+                <p>Détenus incarcérés</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card position-relative">
+                <div class="icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <h4>{{ visites_aujourd_hui|default:0 }}</h4>
+                <p>Visites aujourd'hui</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card position-relative" style="background: linear-gradient(135deg, #6f42c1, #5a2d91);">
+                <div class="icon">
+                    <i class="bi bi-gender-male"></i>
+                </div>
+                <h4>{{ total_hommes|default:0 }}</h4>
+                <p>👦 Total Hommes</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card position-relative" style="background: linear-gradient(135deg, #e83e8c, #c82333);">
+                <div class="icon">
+                    <i class="bi bi-gender-female"></i>
+                </div>
+                <h4>{{ total_femmes|default:0 }}</h4>
+                <p>👧 Total Femmes</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card position-relative">
+                <div class="icon">
+                    <i class="bi bi-person-badge"></i>
+                </div>
+                <h4>{{ total_personnel|default:0 }}</h4>
+                <p>Personnel actif</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card position-relative">
+                <div class="icon">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h4>{{ visites_en_cours|default:0 }}</h4>
+                <p>Visites en cours</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="quick-actions">
+                <h3><i class="bi bi-lightning"></i> Actions rapides</h3>
+                <div class="d-flex flex-wrap">
+                    <a href="{% url 'detenu_create' %}" class="action-btn">
+                        <i class="bi bi-person-plus"></i> Nouveau détenu
+                    </a>
+                    <a href="{% url 'visite_create' %}" class="action-btn">
+                        <i class="bi bi-calendar-plus"></i> Nouvelle visite
+                    </a>
+                    <a href="{% url 'personnel_create' %}" class="action-btn">
+                        <i class="bi bi-person-badge"></i> Nouveau personnel
+                    </a>
+                    <a href="{% url 'visiteurs_list' %}" class="action-btn">
+                        <i class="bi bi-people"></i> Gérer visiteurs
+                    </a>
+                    <a href="{% url 'detenus_list' %}" class="action-btn">
+                        <i class="bi bi-list"></i> Liste détenus
+                    </a>
+                    <a href="{% url 'visites_list' %}" class="action-btn">
+                        <i class="bi bi-calendar3"></i> Liste visites
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="row">
+        <!-- Activité récente -->
+        <div class="col-lg-8">
+            <div class="recent-activity">
+                <h3><i class="bi bi-clock-history"></i> Activité récente</h3>
+                
+                <!-- Visites récentes -->
+                {% if visites_recentes %}
+                <div class="mb-3">
+                    <h6 class="text-primary">Visites récentes</h6>
+                    {% for visite in visites_recentes|slice:":5" %}
+                    <div class="activity-item">
+                        <div class="activity-icon bg-primary text-white">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h6>{{ visite.visiteur.nom_complet }} → {{ visite.detenu.nom_complet }}</h6>
+                            <p>{{ visite.date_visite|date:"d/m/Y H:i" }} - {{ visite.duree_minutes }} min</p>
+                        </div>
+                        <div class="activity-time">
+                            {% if visite.statut == 'PROGRAMMEE' %}
+                                <span class="status-badge status-programmee">Programmée</span>
+                            {% elif visite.statut == 'EN_COURS' %}
+                                <span class="status-badge status-en-cours">En cours</span>
+                            {% elif visite.statut == 'TERMINEE' %}
+                                <span class="status-badge status-terminee">Terminée</span>
+                            {% elif visite.statut == 'ANNULEE' %}
+                                <span class="status-badge status-annulee">Annulée</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Détenus récents -->
+                {% if detenus_recents %}
+                <div class="mb-3">
+                    <h6 class="text-primary">Détenus récents</h6>
+                    {% for detenu in detenus_recents|slice:":5" %}
+                    <div class="activity-item">
+                        <div class="activity-icon bg-secondary text-white">
+                            <i class="bi bi-person"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h6>{{ detenu.nom_complet }}</h6>
+                            <p>Matricule: {{ detenu.matricule }} - Cellule: {{ detenu.cellule }}</p>
+                        </div>
+                        <div class="activity-time">
+                            {{ detenu.created_at|date:"d/m/Y" }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Informations secondaires -->
+        <div class="col-lg-4">
+            <!-- Statistiques rapides -->
+            <div class="compact-grid">
+                <div class="compact-card">
+                    <h5><i class="bi bi-calendar-week"></i> Cette semaine</h5>
+                    <p>{{ visites_semaine|default:0 }} visites programmées</p>
+                </div>
+                <div class="compact-card">
+                    <h5><i class="bi bi-clock"></i> En attente</h5>
+                    <p>{{ visites_attente|default:0 }} visites en attente</p>
+                </div>
+                <div class="compact-card">
+                    <h5><i class="bi bi-shield-exclamation"></i> Alertes</h5>
+                    <p>{{ alertes|default:0 }} alertes actives</p>
+                </div>
+                <div class="compact-card">
+                    <h5><i class="bi bi-graph-up"></i> Performance</h5>
+                    <p>{{ performance|default:"N/A" }}% efficacité</p>
+                </div>
+            </div>
+
+            <!-- Liens rapides -->
+            <div class="compact-card">
+                <h5><i class="bi bi-link-45deg"></i> Liens rapides</h5>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'detenus_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-list"></i> Liste des détenus
+                    </a>
+                    <a href="{% url 'visites_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-calendar3"></i> Liste des visites
+                    </a>
+                    <a href="{% url 'personnel_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-people"></i> Personnel
+                    </a>
+                    <a href="{% url 'visiteurs_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-person-check"></i> Visiteurs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

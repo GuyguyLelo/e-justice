@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - e-Detenu{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fiche-form { padding: 0.6rem 0.9rem 1rem; }
+    .fiche-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.55rem;
+        flex-wrap: wrap;
+    }
+    .fiche-toolbar h1 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #003366;
+    }
+    .fiche-toolbar .btn {
+        border-radius: 0;
+        font-size: 0.75rem;
+        padding: 0.28rem 0.7rem;
+        font-weight: 600;
+    }
+    .fiche-body { background: #fff; border: 1px solid #d5dee8; }
+    .fiche-tabs {
+        display: flex;
+        border-bottom: 2px solid #0066c7;
+        background: #f4f8fc;
+    }
+    .fiche-tabs .nav-link {
+        border: none;
+        border-radius: 0;
+        color: #004a94;
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.5rem 0.85rem;
+    }
+    .fiche-tabs .nav-link.active { background: #0066c7; color: #fff; }
+    .tab-pane { padding: 0.85rem; }
+    .fg { margin-bottom: 0.55rem; }
+    .fg label {
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #004a94;
+        margin-bottom: 0.15rem;
+    }
+    .fg label .req { color: #ce1020; }
+    .fg .form-control, .fg .form-select {
+        border-radius: 0;
+        height: 2.1rem;
+        font-size: 0.85rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .fg textarea.form-control { height: auto; min-height: 4rem; }
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.4rem;
+        padding: 0.65rem 0.85rem;
+        border-top: 3px solid #f7d116;
+        background: #f8fafc;
+    }
+    .form-actions .btn { border-radius: 0; font-weight: 700; font-size: 0.78rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fiche-form">
+    <div class="fiche-toolbar">
+        <h1><i class="bi bi-calendar-plus"></i> {{ title }}</h1>
+        <a href="{% url 'visites_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Liste</a>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="post" id="visiteForm" novalidate>
+        {% csrf_token %}
+        <div class="fiche-body">
+            <ul class="nav fiche-tabs" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-planning" type="button">Planification</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-objets" type="button">Objets &amp; observations</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="tab-planning">
+                    <div class="row g-2">
+                        <div class="col-md-6 fg">
+                            <label for="{{ form.detenu.id_for_label }}">Détenu <span class="req">*</span></label>
+                            {{ form.detenu }}{{ form.detenu.errors }}
+                        </div>
+                        <div class="col-md-6 fg">
+                            <label for="{{ form.visiteur.id_for_label }}">Visiteur <span class="req">*</span>
+                                <a href="{% url 'visiteur_create' %}" class="fw-normal text-decoration-none" style="text-transform:none;letter-spacing:0;">(+ nouveau)</a>
+                            </label>
+                            {{ form.visiteur }}{{ form.visiteur.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.date_visite.id_for_label }}">Date et heure <span class="req">*</span></label>
+                            {{ form.date_visite }}{{ form.date_visite.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.duree_minutes.id_for_label }}">Durée (min) <span class="req">*</span></label>
+                            {{ form.duree_minutes }}{{ form.duree_minutes.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.statut.id_for_label }}">Statut</label>
+                            {{ form.statut }}{{ form.statut.errors }}
+                        </div>
+                        <div class="col-md-6 fg">
+                            <label for="{{ form.agent_controle.id_for_label }}">Agent de contrôle</label>
+                            {{ form.agent_controle }}{{ form.agent_controle.errors }}
+                        </div>
+                        <div class="col-md-6 fg">
+                            <label for="{{ form.motif_refus.id_for_label }}">Motif de refus</label>
+                            {{ form.motif_refus }}{{ form.motif_refus.errors }}
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="tab-objets">
+                    <div class="row g-2">
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.objets_apportes.id_for_label }}">Objets apportés</label>
+                            {{ form.objets_apportes }}{{ form.objets_apportes.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.objets_autorises.id_for_label }}">Objets autorisés</label>
+                            {{ form.objets_autorises }}{{ form.objets_autorises.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.objets_refuses.id_for_label }}">Objets refusés</label>
+                            {{ form.objets_refuses }}{{ form.objets_refuses.errors }}
+                        </div>
+                        <div class="col-12 fg">
+                            <label for="{{ form.observations.id_for_label }}">Observations</label>
+                            {{ form.observations }}{{ form.observations.errors }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <a href="{% url 'visites_list' %}" class="btn btn-outline-secondary">Annuler</a>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> {{ action }}</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var err = document.querySelector('.tab-pane .errorlist, .tab-pane .invalid-feedback, .tab-pane .text-danger');
+    if (!err) return;
+    var pane = err.closest('.tab-pane');
+    if (!pane) return;
+    var btn = document.querySelector('[data-bs-target="#' + pane.id + '"]');
+    if (btn && typeof bootstrap !== 'undefined') {
+        new bootstrap.Tab(btn).show();
+    }
+})();
+</script>
+{% endblock %}

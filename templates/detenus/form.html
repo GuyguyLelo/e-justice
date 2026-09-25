@@ -1,0 +1,1614 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - e-Detenu{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #2c3e50, #3498db);
+        --secondary-gradient: linear-gradient(135deg, #3498db, #2980b9);
+        --success-gradient: linear-gradient(135deg, #27ae60, #2ecc71);
+        --warning-gradient: linear-gradient(135deg, #f39c12, #e67e22);
+        --danger-gradient: linear-gradient(135deg, #e74c3c, #c0392b);
+        --info-gradient: linear-gradient(135deg, #17a2b8, #138496);
+        --light-gradient: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        --dark-gradient: linear-gradient(135deg, #343a40, #495057);
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        min-height: 100vh;
+    }
+    
+    .form-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 2rem;
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+    }
+    
+    .form-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .form-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(180deg); }
+    }
+    
+    .form-header h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .form-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .form-body {
+        padding: 3rem;
+    }
+    
+    .form-section {
+        background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .form-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+    
+    .form-section h5 {
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .form-section h5 i {
+        font-size: 1.5rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .form-floating {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+    
+    .form-floating .form-control {
+        border-radius: 0.75rem;
+        border: 2px solid #e9ecef;
+        padding: 1.25rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.8);
+    }
+    
+    .form-floating .form-control:focus {
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.15);
+        transform: translateY(-2px);
+        background: white;
+    }
+    
+    .form-floating label {
+        color: #6c757d;
+        font-weight: 500;
+        padding: 0.75rem 1rem;
+    }
+    
+    .form-floating .form-control:focus ~ label,
+    .form-floating .form-control:not(:placeholder-shown) ~ label {
+        color: var(--secondary-color);
+        font-weight: 600;
+    }
+    
+    .btn-save {
+        background: var(--success-gradient);
+        border: none;
+        border-radius: 1rem;
+        padding: 1rem 3rem;
+        font-weight: 700;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: white;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-save::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 1rem 2rem rgba(39, 174, 96, 0.4);
+    }
+    
+    .btn-save:hover::before {
+        left: 100%;
+    }
+    
+    .btn-cancel {
+        background: var(--light-gradient);
+        border: 2px solid #dee2e6;
+        border-radius: 1rem;
+        padding: 1rem 2rem;
+        font-weight: 600;
+        color: #6c757d;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+        transform: translateY(-2px);
+        color: #495057;
+    }
+    
+    .required-field::after {
+        content: " *";
+        color: var(--danger-color);
+        font-weight: bold;
+    }
+    
+    .form-help {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(52, 152, 219, 0.1);
+        border-radius: 0.5rem;
+        border-left: 3px solid var(--secondary-color);
+    }
+    
+    .form-errors {
+        background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+        border: 1px solid #f5c6cb;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 0.5rem 1rem rgba(231, 76, 60, 0.1);
+    }
+    
+    .form-errors h6 {
+        color: #721c24;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-errors ul {
+        margin-bottom: 0;
+        padding-left: 1.5rem;
+    }
+    
+    .form-errors li {
+        color: #721c24;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .progress-indicator {
+        background: var(--light-gradient);
+        border-radius: 1rem;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05);
+    }
+    
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        position: relative;
+    }
+    
+    .progress-step::after {
+        content: '';
+        position: absolute;
+        top: 1rem;
+        left: 50%;
+        width: 100%;
+        height: 2px;
+        background: #dee2e6;
+        z-index: 1;
+    }
+    
+    .progress-step:last-child::after {
+        display: none;
+    }
+    
+    .progress-step.active::after {
+        background: var(--success-gradient);
+    }
+    
+    .step-number {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: #dee2e6;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        position: relative;
+        z-index: 2;
+        transition: all 0.3s ease;
+    }
+    
+    .progress-step.active .step-number {
+        background: var(--success-gradient);
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .step-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #6c757d;
+        text-align: center;
+    }
+    
+    .progress-step.active .step-label {
+        color: var(--success-color);
+    }
+    
+    .form-actions {
+        background: var(--light-gradient);
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-top: 2rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+    }
+    
+    .floating-label-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .floating-label {
+        position: absolute;
+        top: 1.25rem;
+        left: 1rem;
+        color: #6c757d;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        pointer-events: none;
+        z-index: 1;
+    }
+    
+    .form-control:focus + .floating-label,
+    .form-control:not(:placeholder-shown) + .floating-label {
+        top: 0.5rem;
+        left: 0.75rem;
+        font-size: 0.75rem;
+        color: var(--secondary-color);
+        font-weight: 600;
+        background: white;
+        padding: 0 0.5rem;
+    }
+    
+    .icon-input {
+        position: relative;
+    }
+    
+    .icon-input i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        z-index: 2;
+    }
+    
+    .icon-input .form-control {
+        padding-left: 3rem;
+    }
+    
+    .section-divider {
+        height: 2px;
+        background: var(--primary-gradient);
+        margin: 2rem 0;
+        border-radius: 1px;
+    }
+    
+    .form-tips {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border-left: 4px solid var(--secondary-color);
+    }
+    
+    .form-tips h6 {
+        color: var(--primary-color);
+        font-weight: 700;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-tips ul {
+        margin-bottom: 0;
+        padding-left: 1.5rem;
+    }
+    
+    .form-tips li {
+        color: #1976d2;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    
+    /* Styles pour la capture biométrique */
+    .biometric-capture-section {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border: 2px solid #dee2e6;
+    }
+    
+    .biometric-capture-section h6 {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .capture-options {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .upload-option {
+        flex: 1;
+    }
+    
+    .capture-option {
+        display: flex;
+        align-items: center;
+    }
+    
+    .btn-capture {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-capture:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 123, 255, 0.3);
+    }
+    
+    .capture-preview {
+        text-align: center;
+        padding: 1rem;
+        background: white;
+        border-radius: 0.5rem;
+        border: 2px dashed #28a745;
+    }
+    
+    .capture-preview img {
+        max-width: 150px;
+        max-height: 150px;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Styles pour les empreintes digitales */
+    .fingerprint-scanner, .dna-scanner {
+        text-align: center;
+        padding: 2rem;
+        background: white;
+        border-radius: 0.5rem;
+        border: 2px dashed #6c757d;
+        margin-bottom: 1rem;
+    }
+    
+    .scanner-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .fingerprint-fingers {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
+    
+    .finger-item {
+        padding: 0.5rem;
+        background: #e9ecef;
+        border-radius: 0.5rem;
+        text-align: center;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .finger-item.captured {
+        background: #d4edda;
+        color: #155724;
+        border: 2px solid #28a745;
+    }
+    
+    .fingerprint-data, .dna-data {
+        background: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 2px solid #28a745;
+    }
+    
+    .dna-sequence {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        word-break: break-all;
+        margin: 1rem 0;
+    }
+    
+    /* Modal pour la webcam */
+    .camera-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    
+    .camera-modal.show {
+        display: flex;
+    }
+    
+    .camera-container {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        max-width: 600px;
+        width: 90%;
+        text-align: center;
+    }
+    
+    .camera-video {
+        width: 100%;
+        max-width: 400px;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .camera-controls {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .btn-capture-photo {
+        background: var(--success-gradient);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-capture-photo:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(40, 167, 69, 0.4);
+    }
+    
+    .btn-close-camera {
+        background: var(--danger-gradient);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-close-camera:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(220, 53, 69, 0.4);
+    }
+    
+    /* Animation pour la capture */
+    @keyframes capture-flash {
+        0% { background: white; }
+        50% { background: #ffc107; }
+        100% { background: white; }
+    }
+    
+    .capture-flash {
+        animation: capture-flash 0.5s ease-in-out;
+    }
+    
+    @media (max-width: 768px) {
+        .form-body {
+            padding: 1.5rem;
+        }
+        
+        .form-section {
+            padding: 1.5rem;
+        }
+        
+        .progress-steps {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .progress-step::after {
+            display: none;
+        }
+        
+        .capture-options {
+            flex-direction: column;
+        }
+        
+        .fingerprint-fingers {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .camera-container {
+            width: 95%;
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+            <div class="form-container">
+                <!-- En-tête du formulaire -->
+                <div class="form-header">
+                    <h2><i class="bi bi-person-badge"></i> {{ title }}</h2>
+                    <p>Enregistrement d'un nouveau détenu dans le système e-Detenu</p>
+                </div>
+                
+                <!-- Corps du formulaire -->
+                <div class="form-body">
+                    <!-- Indicateur de progression -->
+                    <div class="progress-indicator">
+                        <div class="progress-steps">
+                            <div class="progress-step active">
+                                <div class="step-number">1</div>
+                                <div class="step-label">Informations personnelles</div>
+                            </div>
+                            <div class="progress-step">
+                                <div class="step-number">2</div>
+                                <div class="step-label">Informations judiciaires</div>
+                            </div>
+                            <div class="progress-step">
+                                <div class="step-number">3</div>
+                                <div class="step-label">Informations pénitentiaires</div>
+                            </div>
+                            <div class="progress-step">
+                                <div class="step-number">4</div>
+                                <div class="step-label">Informations médicales</div>
+                            </div>
+                            <div class="progress-step">
+                                <div class="step-number">5</div>
+                                <div class="step-label">Données biométriques</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Conseils d'utilisation -->
+                    <div class="form-tips">
+                        <h6><i class="bi bi-lightbulb"></i> Conseils pour remplir le formulaire</h6>
+                        <ul>
+                            <li>Remplissez tous les champs marqués d'un astérisque (*)</li>
+                            <li>Vérifiez l'exactitude des informations avant de soumettre</li>
+                            <li>Le matricule doit être unique pour chaque détenu</li>
+                            <li>Les dates doivent être cohérentes (arrestation ≤ incarcération)</li>
+                        </ul>
+                    </div>
+                    
+                    {% if form.errors %}
+                        <div class="form-errors">
+                            <h6><i class="bi bi-exclamation-triangle"></i> Erreurs de validation</h6>
+                            <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li><strong>{{ field }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post" enctype="multipart/form-data" id="detenuForm">
+                        {% csrf_token %}
+                    
+                    <!-- Informations personnelles -->
+                    <div class="form-section">
+                        <h5><i class="bi bi-person"></i> Informations personnelles</h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    {{ form.matricule }}
+                                    <label for="{{ form.matricule.id_for_label }}" class="required-field">Matricule</label>
+                                    <div class="form-help">Identifiant unique du détenu</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    {{ form.nom }}
+                                    <label for="{{ form.nom.id_for_label }}" class="required-field">Nom</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    {{ form.prenom }}
+                                    <label for="{{ form.prenom.id_for_label }}" class="required-field">Prénom</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    {{ form.sexe }}
+                                    <label for="{{ form.sexe.id_for_label }}" class="required-field">Sexe</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.date_naissance }}
+                                    <label for="{{ form.date_naissance.id_for_label }}" class="required-field">Date de naissance</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.lieu_naissance }}
+                                    <label for="{{ form.lieu_naissance.id_for_label }}" class="required-field">Lieu de naissance</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.nationalite }}
+                                    <label for="{{ form.nationalite.id_for_label }}" class="required-field">Nationalité</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.profession }}
+                                    <label for="{{ form.profession.id_for_label }}">Profession</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.telephone }}
+                                    <label for="{{ form.telephone.id_for_label }}">Téléphone</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    {{ form.adresse }}
+                                    <label for="{{ form.adresse.id_for_label }}">Adresse</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Informations judiciaires -->
+                    <div class="form-section">
+                        <h5><i class="bi bi-gavel"></i> Informations judiciaires</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.date_arrestation }}
+                                    <label for="{{ form.date_arrestation.id_for_label }}" class="required-field">Date d'arrestation</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.date_incarceration }}
+                                    <label for="{{ form.date_incarceration.id_for_label }}" class="required-field">Date d'incarcération</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.tribunal }}
+                                    <label for="{{ form.tribunal.id_for_label }}" class="required-field">Tribunal</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.numero_dossier }}
+                                    <label for="{{ form.numero_dossier.id_for_label }}">Numéro de dossier</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.regime }}
+                                    <label for="{{ form.regime.id_for_label }}" class="required-field">Régime</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.dossier.id_for_label }}" class="form-label">Dossier du détenu</label>
+                                {{ form.dossier }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    {{ form.motif_incarceration }}
+                                    <label for="{{ form.motif_incarceration.id_for_label }}" class="required-field">Motif d'incarcération</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.avocat }}
+                                    <label for="{{ form.avocat.id_for_label }}">Avocat</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.telephone_avocat }}
+                                    <label for="{{ form.telephone_avocat.id_for_label }}">Téléphone avocat</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Informations pénitentiaires -->
+                    <div class="form-section">
+                        <h5><i class="bi bi-building"></i> Informations pénitentiaires</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.cellule }}
+                                    <label for="{{ form.cellule.id_for_label }}">Cellule</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.statut }}
+                                    <label for="{{ form.statut.id_for_label }}" class="required-field">Statut</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.duree_peine_mois }}
+                                    <label for="{{ form.duree_peine_mois.id_for_label }}">Durée de peine (mois)</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.date_liberation_prevue }}
+                                    <label for="{{ form.date_liberation_prevue.id_for_label }}">Date de libération prévue</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.date_liberation_effective }}
+                                    <label for="{{ form.date_liberation_effective.id_for_label }}">Date de libération effective</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    {{ form.motif_liberation }}
+                                    <label for="{{ form.motif_liberation.id_for_label }}">Motif de libération</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Informations médicales -->
+                    <div class="form-section">
+                        <h5><i class="bi bi-heart-pulse"></i> Informations médicales</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.groupe_sanguin }}
+                                    <label for="{{ form.groupe_sanguin.id_for_label }}">Groupe sanguin</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.allergies }}
+                                    <label for="{{ form.allergies.id_for_label }}">Allergies</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.maladies_chroniques }}
+                                    <label for="{{ form.maladies_chroniques.id_for_label }}">Maladies chroniques</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Données biométriques -->
+                    <div class="form-section">
+                        <h5><i class="bi bi-person-badge-fill"></i> Données biométriques</h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    {{ form.taille }}
+                                    <label for="{{ form.taille.id_for_label }}">Taille (cm)</label>
+                                    <div class="form-help">Entre 100 et 250 cm</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    {{ form.poids }}
+                                    <label for="{{ form.poids.id_for_label }}">Poids (kg)</label>
+                                    <div class="form-help">Entre 20 et 300 kg</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    {{ form.couleur_yeux }}
+                                    <label for="{{ form.couleur_yeux.id_for_label }}">Couleur des yeux</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    {{ form.couleur_cheveux }}
+                                    <label for="{{ form.couleur_cheveux.id_for_label }}">Couleur des cheveux</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.type_cheveux }}
+                                    <label for="{{ form.type_cheveux.id_for_label }}">Type de cheveux</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.couleur_peau }}
+                                    <label for="{{ form.couleur_peau.id_for_label }}">Couleur de peau</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.cicatrices }}
+                                    <label for="{{ form.cicatrices.id_for_label }}">Cicatrices et marques</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="biometric-capture-section">
+                                    <h6><i class="bi bi-camera"></i> Photo de face</h6>
+                                    <div class="capture-options">
+                                        <div class="upload-option">
+                                            <div class="form-floating">
+                                                {{ form.photo_face }}
+                                                <label for="{{ form.photo_face.id_for_label }}">Upload fichier</label>
+                                                <div class="form-help">Format: JPG, PNG (max 5MB)</div>
+                                            </div>
+                                        </div>
+                                        <div class="capture-option">
+                                            <button type="button" class="btn btn-outline-primary btn-capture" data-camera="face">
+                                                <i class="bi bi-camera-fill"></i> Capturer via webcam
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="capture-preview" id="face-preview" style="display: none;">
+                                        <img id="face-captured" src="" alt="Photo capturée" class="img-thumbnail">
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="clearCapture('face')">
+                                            <i class="bi bi-trash"></i> Supprimer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="biometric-capture-section">
+                                    <h6><i class="bi bi-camera"></i> Photo de profil</h6>
+                                    <div class="capture-options">
+                                        <div class="upload-option">
+                                            <div class="form-floating">
+                                                {{ form.photo_profil }}
+                                                <label for="{{ form.photo_profil.id_for_label }}">Upload fichier</label>
+                                                <div class="form-help">Format: JPG, PNG (max 5MB)</div>
+                                            </div>
+                                        </div>
+                                        <div class="capture-option">
+                                            <button type="button" class="btn btn-outline-primary btn-capture" data-camera="profil">
+                                                <i class="bi bi-camera-fill"></i> Capturer via webcam
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="capture-preview" id="profil-preview" style="display: none;">
+                                        <img id="profil-captured" src="" alt="Photo capturée" class="img-thumbnail">
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="clearCapture('profil')">
+                                            <i class="bi bi-trash"></i> Supprimer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="biometric-capture-section">
+                                    <h6><i class="bi bi-fingerprint"></i> Empreintes digitales</h6>
+                                    <div class="fingerprint-capture">
+                                        <div class="fingerprint-scanner" id="fingerprint-scanner">
+                                            <div class="scanner-placeholder">
+                                                <i class="bi bi-fingerprint" style="font-size: 3rem; color: #6c757d;"></i>
+                                                <p>Scanner d'empreintes digitales</p>
+                                                <button type="button" class="btn btn-primary" onclick="startFingerprintCapture()">
+                                                    <i class="bi bi-fingerprint"></i> Capturer empreintes
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="fingerprint-preview" id="fingerprint-preview" style="display: none;">
+                                            <div class="fingerprint-data">
+                                                <h6>Empreintes capturées</h6>
+                                                <div class="fingerprint-fingers">
+                                                    <div class="finger-item" data-finger="thumb">Pouce</div>
+                                                    <div class="finger-item" data-finger="index">Index</div>
+                                                    <div class="finger-item" data-finger="middle">Majeur</div>
+                                                    <div class="finger-item" data-finger="ring">Annulaire</div>
+                                                    <div class="finger-item" data-finger="pinky">Auriculaire</div>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="clearFingerprint()">
+                                                    <i class="bi bi-trash"></i> Effacer
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-floating mt-3">
+                                        {{ form.empreintes_digitales }}
+                                        <label for="{{ form.empreintes_digitales.id_for_label }}">Données encodées</label>
+                                        <div class="form-help">Données automatiquement générées lors de la capture</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="biometric-capture-section">
+                                    <h6><i class="bi bi-dna"></i> Profil ADN</h6>
+                                    <div class="dna-capture">
+                                        <div class="dna-scanner" id="dna-scanner">
+                                            <div class="scanner-placeholder">
+                                                <i class="bi bi-dna" style="font-size: 3rem; color: #6c757d;"></i>
+                                                <p>Analyseur ADN</p>
+                                                <button type="button" class="btn btn-primary" onclick="startDNACapture()">
+                                                    <i class="bi bi-dna"></i> Capturer ADN
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="dna-preview" id="dna-preview" style="display: none;">
+                                            <div class="dna-data">
+                                                <h6>Profil ADN capturé</h6>
+                                                <div class="dna-sequence">
+                                                    <code id="dna-sequence">ATCGATCGATCG...</code>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="clearDNA()">
+                                                    <i class="bi bi-trash"></i> Effacer
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-floating mt-3">
+                                        {{ form.adn }}
+                                        <label for="{{ form.adn.id_for_label }}">Profil ADN encodé</label>
+                                        <div class="form-help">Données automatiquement générées lors de la capture</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Boutons d'action -->
+                    <div class="form-actions">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-shield-check text-success" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <h6 class="mb-0 text-success">Sécurisé</h6>
+                                        <small class="text-muted">Vos données sont protégées</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-end gap-3">
+                                    <a href="{% url 'detenus_list' %}" class="btn btn-cancel">
+                                        <i class="bi bi-x-circle"></i> Annuler
+                                    </a>
+                                    <button type="submit" class="btn btn-save">
+                                        <i class="bi bi-check-circle"></i> {{ action }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal pour la webcam -->
+    <div class="camera-modal" id="cameraModal">
+        <div class="camera-container">
+            <h5 id="cameraTitle">Capture de photo</h5>
+            <video id="cameraVideo" class="camera-video" autoplay></video>
+            <canvas id="cameraCanvas" style="display: none;"></canvas>
+            <div class="camera-controls">
+                <button type="button" class="btn-capture-photo" id="capturePhotoBtn">
+                    <i class="bi bi-camera-fill"></i> Capturer
+                </button>
+                <button type="button" class="btn-close-camera" id="closeCameraBtn">
+                    <i class="bi bi-x-circle"></i> Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Animation d'entrée du formulaire
+    $('.form-container').hide().fadeIn(1000);
+    $('.form-section').each(function(index) {
+        $(this).hide().delay(index * 200).fadeIn(600);
+    });
+    
+    // Indicateur de progression interactif
+    function updateProgress() {
+        const sections = $('.form-section');
+        const currentSection = $('.form-section:visible').first();
+        const currentIndex = sections.index(currentSection);
+        
+        $('.progress-step').removeClass('active');
+        $('.progress-step').eq(currentIndex).addClass('active');
+    }
+    
+    // Mise à jour de la progression lors du scroll
+    $(window).on('scroll', function() {
+        updateProgress();
+    });
+    
+    // Validation en temps réel avec feedback visuel
+    $('#detenuForm').on('submit', function(e) {
+        const requiredFields = ['matricule', 'nom', 'prenom', 'sexe', 'date_naissance', 
+                               'lieu_naissance', 'nationalite', 'date_arrestation', 
+                               'date_incarceration', 'tribunal', 'regime', 'statut', 
+                               'motif_incarceration'];
+        
+        let hasErrors = false;
+        let errorMessages = [];
+        
+        requiredFields.forEach(function(fieldName) {
+            const field = $(`[name="${fieldName}"]`);
+            const label = field.closest('.form-floating').find('label').text();
+            
+            if (!field.val().trim()) {
+                field.addClass('is-invalid');
+                field.closest('.form-floating').addClass('has-error');
+                hasErrors = true;
+                errorMessages.push(`${label} est obligatoire`);
+            } else {
+                field.removeClass('is-invalid');
+                field.closest('.form-floating').removeClass('has-error');
+            }
+        });
+        
+        if (hasErrors) {
+            e.preventDefault();
+            showAlert('Veuillez corriger les erreurs suivantes :', 'warning', errorMessages);
+            scrollToFirstError();
+            return false;
+        }
+    });
+    
+    // Validation des dates avec feedback en temps réel
+    $('#date_arrestation, #date_incarceration').on('change', function() {
+        const arrestation = new Date($('#date_arrestation').val());
+        const incarceration = new Date($('#date_incarceration').val());
+        
+        if (arrestation && incarceration && arrestation > incarceration) {
+            showFieldError('#date_arrestation', 'La date d\'arrestation ne peut pas être postérieure à la date d\'incarcération');
+        } else {
+            clearFieldError('#date_arrestation');
+        }
+    });
+    
+    // Validation de la date de libération
+    $('#date_liberation_prevue, #date_liberation_effective').on('change', function() {
+        const incarceration = new Date($('#date_incarceration').val());
+        const liberation = new Date($(this).val());
+        
+        if (incarceration && liberation && liberation <= incarceration) {
+            showFieldError(this, 'La date de libération doit être postérieure à la date d\'incarcération');
+        } else {
+            clearFieldError(this);
+        }
+    });
+    
+    // Validation du matricule (unicité)
+    $('#matricule').on('blur', function() {
+        const matricule = $(this).val();
+        if (matricule) {
+            // Ici vous pouvez ajouter une vérification AJAX pour l'unicité
+            console.log('Vérification de l\'unicité du matricule:', matricule);
+        }
+    });
+    
+    // Fonction pour afficher les erreurs de champ
+    function showFieldError(field, message) {
+        const $field = $(field);
+        $field.addClass('is-invalid');
+        
+        // Supprimer l'ancien message d'erreur
+        $field.closest('.form-floating').find('.field-error').remove();
+        
+        // Ajouter le nouveau message
+        $field.closest('.form-floating').append(`
+            <div class="field-error text-danger mt-1">
+                <small><i class="bi bi-exclamation-circle"></i> ${message}</small>
+            </div>
+        `);
+    }
+    
+    // Fonction pour effacer les erreurs de champ
+    function clearFieldError(field) {
+        const $field = $(field);
+        $field.removeClass('is-invalid');
+        $field.closest('.form-floating').find('.field-error').remove();
+    }
+    
+    // Fonction pour afficher les alertes
+    function showAlert(title, type, messages = []) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                <h6><i class="bi bi-exclamation-triangle"></i> ${title}</h6>
+                ${messages.length > 0 ? '<ul class="mb-0"><li>' + messages.join('</li><li>') + '</li></ul>' : ''}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        // Supprimer les alertes existantes
+        $('.alert').remove();
+        
+        // Ajouter la nouvelle alerte
+        $('.form-body').prepend(alertHtml);
+        
+        // Auto-supprimer après 8 secondes
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 8000);
+    }
+    
+    // Fonction pour faire défiler vers la première erreur
+    function scrollToFirstError() {
+        const firstError = $('.is-invalid').first();
+        if (firstError.length) {
+            $('html, body').animate({
+                scrollTop: firstError.offset().top - 100
+            }, 500);
+            firstError.focus();
+        }
+    }
+    
+    // Auto-formatage du matricule
+    $('#matricule').on('input', function() {
+        this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    });
+    
+    // Auto-formatage des noms
+    $('#nom, #prenom').on('input', function() {
+        const value = this.value;
+        this.value = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+    });
+    
+    // Auto-formatage du téléphone
+    $('#telephone, #telephone_avocat').on('input', function() {
+        let value = this.value.replace(/\D/g, '');
+        if (value.length > 0) {
+            if (value.length <= 3) {
+                value = value;
+            } else if (value.length <= 6) {
+                value = value.slice(0, 3) + ' ' + value.slice(3);
+            } else if (value.length <= 9) {
+                value = value.slice(0, 3) + ' ' + value.slice(3, 6) + ' ' + value.slice(6);
+            } else {
+                value = value.slice(0, 3) + ' ' + value.slice(3, 6) + ' ' + value.slice(6, 9);
+            }
+        }
+        this.value = value;
+    });
+    
+    // Animation des champs au focus
+    $('.form-control').on('focus', function() {
+        $(this).closest('.form-floating').addClass('focused');
+    }).on('blur', function() {
+        if (!$(this).val()) {
+            $(this).closest('.form-floating').removeClass('focused');
+        }
+    });
+    
+    // Sauvegarde automatique du brouillon (optionnel)
+    let draftTimer;
+    $('.form-control').on('input', function() {
+        clearTimeout(draftTimer);
+        draftTimer = setTimeout(function() {
+            // Ici vous pouvez ajouter la logique de sauvegarde automatique
+            console.log('Sauvegarde automatique du brouillon...');
+        }, 2000);
+    });
+    
+    // Confirmation avant de quitter la page
+    let formChanged = false;
+    $('.form-control').on('input', function() {
+        formChanged = true;
+    });
+    
+    $(window).on('beforeunload', function() {
+        if (formChanged) {
+            return 'Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter ?';
+        }
+    });
+    
+                $('#detenuForm').on('submit', function() {
+                    formChanged = false;
+                });
+                
+                // Gestion de la webcam
+                let currentStream = null;
+                let currentCameraType = null;
+                
+                // Boutons de capture webcam
+                $('.btn-capture').on('click', function() {
+                    currentCameraType = $(this).data('camera');
+                    openCamera();
+                });
+                
+                // Fermer la webcam
+                $('#closeCameraBtn').on('click', function() {
+                    closeCamera();
+                });
+                
+                // Capturer la photo
+                $('#capturePhotoBtn').on('click', function() {
+                    capturePhoto();
+                });
+                
+                // Fonction pour ouvrir la webcam
+                function openCamera() {
+                    const modal = $('#cameraModal');
+                    const title = $('#cameraTitle');
+                    
+                    if (currentCameraType === 'face') {
+                        title.text('Capture photo de face');
+                    } else {
+                        title.text('Capture photo de profil');
+                    }
+                    
+                    modal.addClass('show');
+                    
+                    navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 640 },
+                            height: { ideal: 480 }
+                        } 
+                    })
+                    .then(function(stream) {
+                        currentStream = stream;
+                        const video = document.getElementById('cameraVideo');
+                        video.srcObject = stream;
+                    })
+                    .catch(function(err) {
+                        console.error('Erreur d\'accès à la webcam:', err);
+                        alert('Impossible d\'accéder à la webcam. Vérifiez les permissions.');
+                        closeCamera();
+                    });
+                }
+                
+                // Fonction pour fermer la webcam
+                function closeCamera() {
+                    const modal = $('#cameraModal');
+                    modal.removeClass('show');
+                    
+                    if (currentStream) {
+                        currentStream.getTracks().forEach(track => track.stop());
+                        currentStream = null;
+                    }
+                }
+                
+                // Fonction pour capturer la photo
+                function capturePhoto() {
+                    const video = document.getElementById('cameraVideo');
+                    const canvas = document.getElementById('cameraCanvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Définir la taille du canvas
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    
+                    // Dessiner l'image de la vidéo sur le canvas
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // Convertir en blob
+                    canvas.toBlob(function(blob) {
+                        // Créer un fichier à partir du blob
+                        const file = new File([blob], `photo_${currentCameraType}_${Date.now()}.jpg`, {
+                            type: 'image/jpeg'
+                        });
+                        
+                        // Créer un objet FileList simulé
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        
+                        // Assigner le fichier au champ correspondant
+                        const inputId = currentCameraType === 'face' ? 'id_photo_face' : 'id_photo_profil';
+                        const input = document.getElementById(inputId);
+                        input.files = dataTransfer.files;
+                        
+                        // Afficher la prévisualisation
+                        const previewId = currentCameraType === 'face' ? 'face-preview' : 'profil-preview';
+                        const imgId = currentCameraType === 'face' ? 'face-captured' : 'profil-captured';
+                        
+                        const preview = document.getElementById(previewId);
+                        const img = document.getElementById(imgId);
+                        
+                        img.src = URL.createObjectURL(blob);
+                        preview.style.display = 'block';
+                        
+                        // Animation de flash
+                        preview.classList.add('capture-flash');
+                        setTimeout(() => {
+                            preview.classList.remove('capture-flash');
+                        }, 500);
+                        
+                        // Fermer la webcam
+                        closeCamera();
+                        
+                        // Déclencher l'événement change sur l'input
+                        $(input).trigger('change');
+                        
+                    }, 'image/jpeg', 0.8);
+                }
+                
+                // Fonction pour effacer la capture
+                window.clearCapture = function(type) {
+                    const previewId = type === 'face' ? 'face-preview' : 'profil-preview';
+                    const inputId = type === 'face' ? 'id_photo_face' : 'id_photo_profil';
+                    
+                    document.getElementById(previewId).style.display = 'none';
+                    document.getElementById(inputId).value = '';
+                };
+                
+                // Fonction pour capturer les empreintes digitales
+                window.startFingerprintCapture = function() {
+                    // Simulation de la capture d'empreintes
+                    const scanner = document.getElementById('fingerprint-scanner');
+                    const preview = document.getElementById('fingerprint-preview');
+                    const fingers = document.querySelectorAll('.finger-item');
+                    
+                    scanner.style.display = 'none';
+                    preview.style.display = 'block';
+                    
+                    // Simulation progressive de la capture
+                    let currentFinger = 0;
+                    const captureInterval = setInterval(() => {
+                        if (currentFinger < fingers.length) {
+                            fingers[currentFinger].classList.add('captured');
+                            currentFinger++;
+                        } else {
+                            clearInterval(captureInterval);
+                            // Générer des données d'empreintes simulées
+                            generateFingerprintData();
+                        }
+                    }, 1000);
+                };
+                
+                // Fonction pour générer les données d'empreintes
+                function generateFingerprintData() {
+                    const fingerprintData = {
+                        timestamp: new Date().toISOString(),
+                        fingers: {
+                            thumb: generateFingerprintTemplate(),
+                            index: generateFingerprintTemplate(),
+                            middle: generateFingerprintTemplate(),
+                            ring: generateFingerprintTemplate(),
+                            pinky: generateFingerprintTemplate()
+                        }
+                    };
+                    
+                    // Encoder les données
+                    const encodedData = btoa(JSON.stringify(fingerprintData));
+                    document.getElementById('id_empreintes_digitales').value = encodedData;
+                }
+                
+                // Fonction pour générer un template d'empreinte simulé
+                function generateFingerprintTemplate() {
+                    const template = [];
+                    for (let i = 0; i < 100; i++) {
+                        template.push({
+                            x: Math.random() * 100,
+                            y: Math.random() * 100,
+                            angle: Math.random() * 360,
+                            type: Math.random() > 0.5 ? 'ridge' : 'valley'
+                        });
+                    }
+                    return template;
+                }
+                
+                // Fonction pour effacer les empreintes
+                window.clearFingerprint = function() {
+                    document.getElementById('fingerprint-scanner').style.display = 'block';
+                    document.getElementById('fingerprint-preview').style.display = 'none';
+                    document.getElementById('id_empreintes_digitales').value = '';
+                    
+                    // Réinitialiser les doigts
+                    document.querySelectorAll('.finger-item').forEach(finger => {
+                        finger.classList.remove('captured');
+                    });
+                };
+                
+                // Fonction pour capturer l'ADN
+                window.startDNACapture = function() {
+                    const scanner = document.getElementById('dna-scanner');
+                    const preview = document.getElementById('dna-preview');
+                    const sequence = document.getElementById('dna-sequence');
+                    
+                    scanner.style.display = 'none';
+                    preview.style.display = 'block';
+                    
+                    // Simulation de l'analyse ADN
+                    let progress = 0;
+                    const analysisInterval = setInterval(() => {
+                        progress += 10;
+                        sequence.textContent = 'Analyse en cours... ' + progress + '%';
+                        
+                        if (progress >= 100) {
+                            clearInterval(analysisInterval);
+                            generateDNASequence();
+                        }
+                    }, 200);
+                };
+                
+                // Fonction pour générer une séquence ADN simulée
+                function generateDNASequence() {
+                    const bases = ['A', 'T', 'C', 'G'];
+                    let sequence = '';
+                    
+                    for (let i = 0; i < 50; i++) {
+                        sequence += bases[Math.floor(Math.random() * bases.length)];
+                    }
+                    
+                    document.getElementById('dna-sequence').textContent = sequence + '...';
+                    
+                    // Générer les données ADN complètes
+                    const dnaData = {
+                        timestamp: new Date().toISOString(),
+                        sequence: sequence,
+                        markers: generateDNAMarkers(),
+                        quality: Math.random() * 100
+                    };
+                    
+                    // Encoder les données
+                    const encodedData = btoa(JSON.stringify(dnaData));
+                    document.getElementById('id_adn').value = encodedData;
+                }
+                
+                // Fonction pour générer des marqueurs ADN simulés
+                function generateDNAMarkers() {
+                    const markers = {};
+                    const markerNames = ['D3S1358', 'vWA', 'D16S539', 'CSF1PO', 'TPOX', 'D8S1179', 'D21S11', 'D18S51', 'D2S441', 'D19S433'];
+                    
+                    markerNames.forEach(marker => {
+                        markers[marker] = {
+                            allele1: Math.floor(Math.random() * 30) + 1,
+                            allele2: Math.floor(Math.random() * 30) + 1
+                        };
+                    });
+                    
+                    return markers;
+                }
+                
+                // Fonction pour effacer l'ADN
+                window.clearDNA = function() {
+                    document.getElementById('dna-scanner').style.display = 'block';
+                    document.getElementById('dna-preview').style.display = 'none';
+                    document.getElementById('id_adn').value = '';
+                };
+            });
+            </script>
+            {% endblock %}

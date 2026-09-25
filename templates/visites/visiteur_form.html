@@ -1,0 +1,285 @@
+{% extends 'visites/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}{% if visiteur %}Modifier le visiteur{% else %}Enregistrer un nouveau visiteur{% endif %}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'visiteurs_list' %}" class="btn btn-outline-primary">
+    <i class="bi bi-arrow-left"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/form_styles.css' %}">
+<style>
+    .form-container {
+        padding: 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
+{% block content_visites %}
+<div class="form-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="form-title"><i class="bi bi-person-plus"></i> {{ title }}</h1>
+        <a href="{% url 'visiteurs_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="form-card">
+        <form method="post" id="visiteurForm" novalidate>
+            {% csrf_token %}
+            
+            <!-- Informations personnelles -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-person"></i> Informations Personnelles
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ form.nom.id_for_label }}" class="form-label">Nom *</label>
+                        {{ form.nom }}
+                        {% if form.nom.errors %}
+                        <div class="invalid-feedback">{{ form.nom.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.prenom.id_for_label }}" class="form-label">Prénom *</label>
+                        {{ form.prenom }}
+                        {% if form.prenom.errors %}
+                        <div class="invalid-feedback">{{ form.prenom.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.type_visiteur.id_for_label }}" class="form-label">Type *</label>
+                        {{ form.type_visiteur }}
+                        {% if form.type_visiteur.errors %}
+                        <div class="invalid-feedback">{{ form.type_visiteur.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.telephone.id_for_label }}" class="form-label">Téléphone</label>
+                        {{ form.telephone }}
+                        {% if form.telephone.errors %}
+                        <div class="invalid-feedback">{{ form.telephone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="{{ form.adresse.id_for_label }}" class="form-label">Adresse</label>
+                        {{ form.adresse }}
+                        {% if form.adresse.errors %}
+                        <div class="invalid-feedback">{{ form.adresse.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pièce d'identité -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-card-text"></i> Pièce d'Identité
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ form.piece_identite.id_for_label }}" class="form-label">Type de pièce *</label>
+                        {{ form.piece_identite }}
+                        {% if form.piece_identite.errors %}
+                        <div class="invalid-feedback">{{ form.piece_identite.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.numero_piece.id_for_label }}" class="form-label">Numéro *</label>
+                        {{ form.numero_piece }}
+                        {% if form.numero_piece.errors %}
+                        <div class="invalid-feedback">{{ form.numero_piece.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Numéro de la pièce d'identité</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relation avec le détenu -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-link"></i> Relation
+                </div>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="{{ form.relation_detenu.id_for_label }}" class="form-label">Relation avec le détenu *</label>
+                        {{ form.relation_detenu }}
+                        {% if form.relation_detenu.errors %}
+                        <div class="invalid-feedback">{{ form.relation_detenu.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations professionnelles (pour avocats) -->
+            <div class="form-section" id="professionnel-section" style="display: none;">
+                <div class="section-title">
+                    <i class="bi bi-briefcase"></i> Informations Professionnelles
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ form.cabinet_avocat.id_for_label }}" class="form-label">Cabinet</label>
+                        {{ form.cabinet_avocat }}
+                        {% if form.cabinet_avocat.errors %}
+                        <div class="invalid-feedback">{{ form.cabinet_avocat.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.numero_ordre_avocat.id_for_label }}" class="form-label">Numéro d'ordre</label>
+                        {{ form.numero_ordre_avocat }}
+                        {% if form.numero_ordre_avocat.errors %}
+                        <div class="invalid-feedback">{{ form.numero_ordre_avocat.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Numéro d'ordre de l'avocat</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-buttons">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> {{ action }}
+                </button>
+                <a href="{% url 'visiteurs_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typeVisiteurField = document.getElementById('{{ form.type_visiteur.id_for_label }}');
+    const professionnelSection = document.getElementById('professionnel-section');
+    
+    // Afficher/masquer la section professionnelle selon le type
+    function toggleProfessionnelSection() {
+        if (typeVisiteurField && typeVisiteurField.value === 'AVOCAT') {
+            professionnelSection.style.display = 'block';
+        } else {
+            professionnelSection.style.display = 'none';
+        }
+    }
+    
+    if (typeVisiteurField) {
+        typeVisiteurField.addEventListener('change', toggleProfessionnelSection);
+        toggleProfessionnelSection();
+    }
+    
+    // Validation en temps réel
+    const form = document.getElementById('visiteurForm');
+    const fields = {
+        nom: document.getElementById('{{ form.nom.id_for_label }}'),
+        prenom: document.getElementById('{{ form.prenom.id_for_label }}'),
+        type_visiteur: typeVisiteurField,
+        piece_identite: document.getElementById('{{ form.piece_identite.id_for_label }}'),
+        numero_piece: document.getElementById('{{ form.numero_piece.id_for_label }}'),
+        relation_detenu: document.getElementById('{{ form.relation_detenu.id_for_label }}')
+    };
+
+    Object.keys(fields).forEach(key => {
+        const field = fields[key];
+        if (field) {
+            field.addEventListener('blur', function() {
+                validateField(key, field);
+            });
+        }
+    });
+
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        if (!fields.nom.value.trim()) {
+            showError(fields.nom, 'Le nom est obligatoire.');
+            isValid = false;
+        }
+        
+        if (!fields.prenom.value.trim()) {
+            showError(fields.prenom, 'Le prénom est obligatoire.');
+            isValid = false;
+        }
+        
+        if (!fields.type_visiteur.value) {
+            showError(fields.type_visiteur, 'Le type de visiteur est obligatoire.');
+            isValid = false;
+        }
+        
+        if (!fields.piece_identite.value) {
+            showError(fields.piece_identite, 'Le type de pièce est obligatoire.');
+            isValid = false;
+        }
+        
+        if (!fields.numero_piece.value.trim()) {
+            showError(fields.numero_piece, 'Le numéro de pièce est obligatoire.');
+            isValid = false;
+        }
+        
+        if (!fields.relation_detenu.value) {
+            showError(fields.relation_detenu, 'La relation avec le détenu est obligatoire.');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    function validateField(key, field) {
+        if (field.value.trim()) {
+            field.classList.remove('is-invalid');
+            const feedback = field.parentElement.querySelector('.invalid-feedback');
+            if (feedback) feedback.remove();
+        }
+    }
+
+    function showError(field, message) {
+        field.classList.add('is-invalid');
+        let feedback = field.parentElement.querySelector('.invalid-feedback');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback';
+            field.parentElement.appendChild(feedback);
+        }
+        feedback.textContent = message;
+    }
+    
+    // Auto-formatage du téléphone
+    const telephoneField = document.getElementById('{{ form.telephone.id_for_label }}');
+    if (telephoneField) {
+        telephoneField.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+    }
+});
+</script>
+{% endblock %}
+
+

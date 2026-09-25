@@ -1,0 +1,277 @@
+{% extends 'visites/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}{% if visite %}Modifier la visite{% else %}Programmer une nouvelle visite{% endif %}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'visites_list' %}" class="btn btn-outline-primary">
+    <i class="bi bi-arrow-left"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/form_styles.css' %}">
+<style>
+    .form-container {
+        padding: 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
+{% block content_visites %}
+<div class="form-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="form-title"><i class="bi bi-calendar-plus"></i> {{ title }}</h1>
+        <a href="{% url 'visites_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="form-card">
+        <form method="post" id="visiteForm" novalidate>
+            {% csrf_token %}
+            
+            <!-- Informations principales -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-info-circle"></i> Informations Principales
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ form.detenu.id_for_label }}" class="form-label">Détenu *</label>
+                        {{ form.detenu }}
+                        {% if form.detenu.errors %}
+                        <div class="invalid-feedback">{{ form.detenu.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.visiteur.id_for_label }}" class="form-label">Visiteur *</label>
+                        {{ form.visiteur }}
+                        {% if form.visiteur.errors %}
+                        <div class="invalid-feedback">{{ form.visiteur.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.date_visite.id_for_label }}" class="form-label">Date et heure *</label>
+                        {{ form.date_visite }}
+                        {% if form.date_visite.errors %}
+                        <div class="invalid-feedback">{{ form.date_visite.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.duree_minutes.id_for_label }}" class="form-label">Durée (min) *</label>
+                        {{ form.duree_minutes }}
+                        {% if form.duree_minutes.errors %}
+                        <div class="invalid-feedback">{{ form.duree_minutes.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Entre 15 et 180 minutes</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.statut.id_for_label }}" class="form-label">Statut</label>
+                        {{ form.statut }}
+                        {% if form.statut.errors %}
+                        <div class="invalid-feedback">{{ form.statut.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.agent_controle.id_for_label }}" class="form-label">Agent de contrôle</label>
+                        {{ form.agent_controle }}
+                        {% if form.agent_controle.errors %}
+                        <div class="invalid-feedback">{{ form.agent_controle.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Objets apportés -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-box"></i> Objets Apportés
+                </div>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="{{ form.objets_apportes.id_for_label }}" class="form-label">Objets apportés</label>
+                        {{ form.objets_apportes }}
+                        {% if form.objets_apportes.errors %}
+                        <div class="invalid-feedback">{{ form.objets_apportes.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Liste des objets apportés par le visiteur</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.objets_autorises.id_for_label }}" class="form-label">Objets autorisés</label>
+                        {{ form.objets_autorises }}
+                        {% if form.objets_autorises.errors %}
+                        <div class="invalid-feedback">{{ form.objets_autorises.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.objets_refuses.id_for_label }}" class="form-label">Objets refusés</label>
+                        {{ form.objets_refuses }}
+                        {% if form.objets_refuses.errors %}
+                        <div class="invalid-feedback">{{ form.objets_refuses.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observations -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-chat-text"></i> Observations
+                </div>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="{{ form.observations.id_for_label }}" class="form-label">Observations</label>
+                        {{ form.observations }}
+                        {% if form.observations.errors %}
+                        <div class="invalid-feedback">{{ form.observations.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="{{ form.motif_refus.id_for_label }}" class="form-label">Motif de refus</label>
+                        {{ form.motif_refus }}
+                        {% if form.motif_refus.errors %}
+                        <div class="invalid-feedback">{{ form.motif_refus.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Si la visite est refusée</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-buttons">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> {{ action }}
+                </button>
+                <a href="{% url 'visites_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('visiteForm');
+    const fields = {
+        detenu: document.getElementById('{{ form.detenu.id_for_label }}'),
+        visiteur: document.getElementById('{{ form.visiteur.id_for_label }}'),
+        date_visite: document.getElementById('{{ form.date_visite.id_for_label }}'),
+        duree_minutes: document.getElementById('{{ form.duree_minutes.id_for_label }}')
+    };
+
+    Object.keys(fields).forEach(key => {
+        const field = fields[key];
+        if (field) {
+            field.addEventListener('blur', function() {
+                validateField(key, field);
+            });
+        }
+    });
+
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        if (!fields.detenu.value) {
+            showError(fields.detenu, 'Le détenu est obligatoire.');
+            isValid = false;
+        }
+        
+        if (!fields.visiteur.value) {
+            showError(fields.visiteur, 'Le visiteur est obligatoire.');
+            isValid = false;
+        }
+        
+        if (!fields.date_visite.value) {
+            showError(fields.date_visite, 'La date et heure sont obligatoires.');
+            isValid = false;
+        } else {
+            const visitDate = new Date(fields.date_visite.value);
+            const now = new Date();
+            if (visitDate < now) {
+                showError(fields.date_visite, 'La date de visite ne peut pas être dans le passé.');
+                isValid = false;
+            }
+        }
+        
+        if (!fields.duree_minutes.value) {
+            showError(fields.duree_minutes, 'La durée est obligatoire.');
+            isValid = false;
+        } else {
+            const duree = parseInt(fields.duree_minutes.value);
+            if (duree < 15 || duree > 180) {
+                showError(fields.duree_minutes, 'La durée doit être entre 15 et 180 minutes.');
+                isValid = false;
+            }
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    function validateField(key, field) {
+        if (field.value.trim()) {
+            field.classList.remove('is-invalid');
+            const feedback = field.parentElement.querySelector('.invalid-feedback');
+            if (feedback) feedback.remove();
+        }
+    }
+
+    function showError(field, message) {
+        field.classList.add('is-invalid');
+        let feedback = field.parentElement.querySelector('.invalid-feedback');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback';
+            field.parentElement.appendChild(feedback);
+        }
+        feedback.textContent = message;
+    }
+    
+    // Auto-formatage de la durée
+    if (fields.duree_minutes) {
+        fields.duree_minutes.addEventListener('input', function() {
+            let value = parseInt(this.value);
+            if (value < 15) this.value = 15;
+            if (value > 180) this.value = 180;
+        });
+    }
+    
+    // Mise à jour de la date minimum
+    if (fields.date_visite) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        fields.date_visite.min = now.toISOString().slice(0, 16);
+    }
+});
+</script>
+{% endblock %}
+
+

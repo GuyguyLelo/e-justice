@@ -1,0 +1,648 @@
+{% extends 'visites/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}{% if visiteur %}Modifier le visiteur{% else %}Enregistrer un nouveau visiteur{% endif %}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'visiteurs_list' %}" class="btn btn-outline-primary">
+    <i class="bi bi-arrow-left"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: linear-gradient(135deg, #0066c7 0%, #004a94 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin: 0 auto;
+        max-width: 900px;
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #0066c7 0%, #004a94 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .form-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(180deg); }
+    }
+    
+    .form-header h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .form-header p {
+        opacity: 0.9;
+        font-size: 1.1rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .form-body {
+        padding: 2.5rem;
+    }
+    
+    .section-title {
+        color: #0066c7;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #f0f0f0;
+        position: relative;
+    }
+    
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 50px;
+        height: 2px;
+        background: linear-gradient(135deg, #0066c7, #004a94);
+    }
+    
+    .form-floating {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-floating .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 0.75rem;
+        padding: 1rem 0.75rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+    
+    .form-floating .form-control:focus {
+        border-color: #0066c7;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        background: white;
+        transform: translateY(-2px);
+    }
+    
+    .form-floating label {
+        color: #6c757d;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .form-floating .form-control:focus ~ label,
+    .form-floating .form-control:not(:placeholder-shown) ~ label {
+        color: #0066c7;
+        transform: scale(0.85) translateY(-0.5rem);
+    }
+    
+    .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 0.75rem;
+        padding: 1rem 0.75rem;
+        font-size: 1rem;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    
+    .form-select:focus {
+        border-color: #0066c7;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        background: white;
+    }
+    
+    .form-check {
+        margin-bottom: 1rem;
+        padding-left: 2.5rem;
+    }
+    
+    .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 2px solid #e9ecef;
+        border-radius: 0.375rem;
+        margin-left: -2.5rem;
+        margin-top: 0.125rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-check-input:checked {
+        background-color: #0066c7;
+        border-color: #0066c7;
+    }
+    
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .form-check-label {
+        font-weight: 500;
+        color: #495057;
+        cursor: pointer;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #0066c7 0%, #004a94 100%);
+        border: none;
+        border-radius: 0.75rem;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .btn-submit:hover::before {
+        left: 100%;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-submit:active {
+        transform: translateY(0);
+    }
+    
+    .btn-cancel {
+        background: #6c757d;
+        border: none;
+        border-radius: 0.75rem;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+    
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    
+    .form-control.is-valid {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+    
+    .required-field {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    
+    .form-help {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+    }
+    
+    .section-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #e9ecef, transparent);
+        margin: 2rem 0;
+    }
+    
+    .floating-label-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .floating-label-group .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 0.75rem;
+        padding: 1rem 0.75rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+    
+    .floating-label-group .form-control:focus {
+        border-color: #0066c7;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        background: white;
+    }
+    
+    .floating-label-group label {
+        position: absolute;
+        top: 1rem;
+        left: 0.75rem;
+        color: #6c757d;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        pointer-events: none;
+        background: white;
+        padding: 0 0.25rem;
+    }
+    
+    .floating-label-group .form-control:focus ~ label,
+    .floating-label-group .form-control:not(:placeholder-shown) ~ label {
+        top: -0.5rem;
+        left: 0.5rem;
+        font-size: 0.875rem;
+        color: #0066c7;
+    }
+    
+    .form-actions {
+        background: #f8f9fa;
+        padding: 2rem;
+        margin: 2rem -2.5rem -2.5rem;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .progress-indicator {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    
+    .progress-step {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin: 0 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .progress-step.active {
+        background: #0066c7;
+        color: white;
+    }
+    
+    .progress-step.completed {
+        background: #28a745;
+        color: white;
+    }
+    
+    .progress-line {
+        width: 2rem;
+        height: 2px;
+        background: #e9ecef;
+        margin: 0 0.5rem;
+        align-self: center;
+    }
+    
+    .progress-line.completed {
+        background: #28a745;
+    }
+    
+    @media (max-width: 768px) {
+        .form-body {
+            padding: 1.5rem;
+        }
+        
+        .form-header {
+            padding: 1.5rem;
+        }
+        
+        .form-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+            margin: 2rem -1.5rem -1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content_visites %}
+<div class="form-container">
+    <div class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <h2>
+                    <i class="bi bi-person-plus"></i> {{ title }}
+                </h2>
+                <p>Enregistrement d'un nouveau visiteur dans le système</p>
+            </div>
+            
+            <div class="form-body">
+                <!-- Indicateur de progression -->
+                <div class="progress-indicator">
+                    <div class="progress-step active">1</div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step">2</div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step">3</div>
+                </div>
+                
+                <form method="post" id="visiteurForm" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Informations personnelles -->
+                    <div class="section-title">
+                        <i class="bi bi-person"></i> Informations personnelles
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.nom }}
+                                <label for="{{ form.nom.id_for_label }}">
+                                    Nom <span class="required-field">*</span>
+                                </label>
+                                {% if form.nom.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.nom.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.prenom }}
+                                <label for="{{ form.prenom.id_for_label }}">
+                                    Prénom <span class="required-field">*</span>
+                                </label>
+                                {% if form.prenom.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.prenom.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.type_visiteur }}
+                                <label for="{{ form.type_visiteur.id_for_label }}">
+                                    Type de visiteur <span class="required-field">*</span>
+                                </label>
+                                {% if form.type_visiteur.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.type_visiteur.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.telephone }}
+                                <label for="{{ form.telephone.id_for_label }}">Téléphone</label>
+                                {% if form.telephone.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.telephone.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-divider"></div>
+                    
+                    <!-- Informations d'identité -->
+                    <div class="section-title">
+                        <i class="bi bi-card-text"></i> Informations d'identité
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.piece_identite }}
+                                <label for="{{ form.piece_identite.id_for_label }}">
+                                    Pièce d'identité <span class="required-field">*</span>
+                                </label>
+                                {% if form.piece_identite.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.piece_identite.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.numero_piece }}
+                                <label for="{{ form.numero_piece.id_for_label }}">
+                                    Numéro de pièce <span class="required-field">*</span>
+                                </label>
+                                {% if form.numero_piece.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.numero_piece.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-divider"></div>
+                    
+                    <!-- Informations complémentaires -->
+                    <div class="section-title">
+                        <i class="bi bi-info-circle"></i> Informations complémentaires
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.relation_detenu }}
+                                <label for="{{ form.relation_detenu.id_for_label }}">Relation avec le détenu</label>
+                                {% if form.relation_detenu.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.relation_detenu.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.cabinet_avocat }}
+                                <label for="{{ form.cabinet_avocat.id_for_label }}">Cabinet d'avocat</label>
+                                {% if form.cabinet_avocat.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.cabinet_avocat.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.numero_ordre_avocat }}
+                                <label for="{{ form.numero_ordre_avocat.id_for_label }}">Numéro d'ordre d'avocat</label>
+                                {% if form.numero_ordre_avocat.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.numero_ordre_avocat.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="form-floating">
+                                {{ form.adresse }}
+                                <label for="{{ form.adresse.id_for_label }}">Adresse complète</label>
+                                {% if form.adresse.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.adresse.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions du formulaire -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-submit">
+                            <i class="bi bi-check-circle"></i> Enregistrer
+                        </button>
+                        <a href="{% url 'visiteurs_list' %}" class="btn btn-cancel">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animation des champs au focus
+    const formControls = document.querySelectorAll('.form-control');
+    formControls.forEach(control => {
+        control.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        control.addEventListener('blur', function() {
+            if (!this.value) {
+                this.parentElement.classList.remove('focused');
+            }
+        });
+    });
+    
+    // Validation en temps réel
+    const form = document.getElementById('visiteurForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Vérifier les champs requis
+        const requiredFields = form.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+                field.classList.add('is-valid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            submitBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Veuillez corriger les erreurs';
+            submitBtn.classList.add('btn-danger');
+            
+            setTimeout(() => {
+                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Enregistrer';
+                submitBtn.classList.remove('btn-danger');
+            }, 3000);
+        }
+    });
+    
+    // Animation de progression
+    const progressSteps = document.querySelectorAll('.progress-step');
+    let currentStep = 0;
+    
+    function updateProgress() {
+        progressSteps.forEach((step, index) => {
+            if (index < currentStep) {
+                step.classList.add('completed');
+            } else if (index === currentStep) {
+                step.classList.add('active');
+            } else {
+                step.classList.remove('active', 'completed');
+            }
+        });
+    }
+    
+    // Mise à jour de la progression lors du remplissage
+    formControls.forEach((control, index) => {
+        control.addEventListener('input', function() {
+            if (this.value.trim()) {
+                const section = this.closest('.row');
+                if (section && !section.classList.contains('completed')) {
+                    section.classList.add('completed');
+                    currentStep = Math.min(currentStep + 1, progressSteps.length - 1);
+                    updateProgress();
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+

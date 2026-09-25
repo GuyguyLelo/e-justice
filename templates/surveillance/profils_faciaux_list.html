@@ -1,0 +1,237 @@
+{% extends 'surveillance/base.html' %}
+
+{% block title %}Profils Faciaux des Détenus{% endblock %}
+
+{% block page_title %}Profils Faciaux des Détenus{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Profils Faciaux des Détenus</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'surveillance:dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+        {% if user.role == 'ADMIN' or user.role == 'DIRECTEUR' %}
+        <div class="btn-group">
+            <a href="/admin/surveillance/profilfacialdetenu/add/" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus"></i> Nouveau profil
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Recherche</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ request.GET.search }}" placeholder="Nom, prénom, matricule">
+            </div>
+            <div class="col-md-4">
+                <label for="actif" class="form-label">Statut</label>
+                <select class="form-select" id="actif" name="actif">
+                    <option value="">Tous les profils</option>
+                    <option value="oui" {% if request.GET.actif == 'oui' %}selected{% endif %}>Actifs</option>
+                    <option value="non" {% if request.GET.actif == 'non' %}selected{% endif %}>Inactifs</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filtrer
+                    </button>
+                    <a href="{% url 'surveillance:profils_faciaux_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Réinitialiser
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des profils -->
+<div class="row">
+    {% for profil in page_obj %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    {{ profil.detenu.nom }} {{ profil.detenu.prenom }}
+                </h6>
+                <div>
+                    {% if profil.actif %}
+                    <span class="badge bg-success">Actif</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactif</span>
+                    {% endif %}
+                    <span class="badge bg-{{ profil.qualite_image|lower }}">
+                        {{ profil.get_qualite_image_display }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Matricule</small>
+                        <p class="mb-1">{{ profil.detenu.matricule }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Centre</small>
+                        <p class="mb-1">{{ profil.detenu.centre.nom }}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Date d'enregistrement</small>
+                        <p class="mb-1">{{ profil.date_enregistrement|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Dernière mise à jour</small>
+                        <p class="mb-1">{{ profil.derniere_mise_a_jour|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+                {% if profil.image_reference %}
+                <div class="text-center mt-3">
+                    <img src="{{ profil.image_reference.url }}" 
+                         alt="Profil facial de {{ profil.detenu.nom }} {{ profil.detenu.prenom }}" 
+                         class="img-fluid rounded" 
+                         style="max-height: 150px;">
+                </div>
+                {% endif %}
+                <div class="mt-2">
+                    <small class="text-muted">Créé par</small>
+                    <p class="mb-1">
+                        {% if profil.created_by %}
+                            {{ profil.created_by.get_full_name|default:profil.created_by.username }}
+                        {% else %}
+                            Système
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    {% if user.role == 'ADMIN' or user.role == 'DIRECTEUR' %}
+                    <a href="/admin/surveillance/profilfacialdetenu/{{ profil.id }}/change/" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                    <a href="/admin/surveillance/profilfacialdetenu/{{ profil.id }}/delete/" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </a>
+                    {% endif %}
+                    <button class="btn btn-sm btn-outline-info" onclick="rechargerEncodage({{ profil.id }})">
+                        <i class="fas fa-sync"></i> Recharger
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-id-card fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Aucun profil facial trouvé</h4>
+            <p class="text-muted">
+                {% if request.GET.search or request.GET.actif %}
+                Essayez de modifier les filtres.
+                {% else %}
+                Aucun profil facial n'a été enregistré.
+                {% endif %}
+            </p>
+            {% if user.role == 'ADMIN' or user.role == 'DIRECTEUR' %}
+            <a href="/admin/surveillance/profilfacialdetenu/add/" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Créer un profil
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav aria-label="Pagination des profils">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Début</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Précédent</a>
+        </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active">
+            <span class="page-link">{{ num }}</span>
+        </li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">{{ num }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Suivant</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Fin</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function rechargerEncodage(profilId) {
+    if (confirm('Êtes-vous sûr de vouloir recharger l\'encodage facial de ce profil ?')) {
+        fetch(`/api/surveillance/profils-faciaux/${profilId}/recharger/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert(data.message);
+                location.reload();
+            } else if (data.error) {
+                alert('Erreur: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erreur lors du rechargement de l\'encodage');
+        });
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

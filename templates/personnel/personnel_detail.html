@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ personnel_full_name }} - Personnel{% endblock %}
+
+{% block content %}
+<div class="fiche">
+    <div class="fiche-toolbar">
+        <h2><i class="bi bi-person-badge"></i> Fiche personnel</h2>
+        <div class="fiche-actions">
+            <a href="{% url 'personnel_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Liste</a>
+            {% if request.user.can_edit_personnel %}
+            <a href="{% url 'personnel_edit' personnel.id %}" class="btn btn-primary"><i class="bi bi-pencil"></i> Modifier</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="id-banner">
+        <div class="id-photo">{{ personnel_full_name|slice:":1"|upper }}</div>
+        <div>
+            <h1>{{ personnel_full_name }}</h1>
+            <p class="id-meta">Matricule {{ personnel.matricule }}{% if personnel.centre %} · {{ personnel.centre.nom }}{% endif %}</p>
+            <p class="id-meta">{{ personnel.get_type_personnel_display }}{% if personnel.specialite %} · {{ personnel.specialite }}{% endif %}</p>
+        </div>
+        <div class="id-status">
+            <span class="status-badge {% if personnel.statut == 'ACTIF' %}status-libere{% elif personnel.statut == 'SUSPENDU' %}{% else %}status-evade{% endif %}">{{ personnel.get_statut_display }}</span>
+            <span class="id-meta">{{ personnel.telephone|default:"" }}</span>
+        </div>
+    </div>
+    <div class="kpi-row cols-4">
+        <div class="kpi"><span>Embauche</span><strong>{{ personnel.date_embauche|date:"d/m/Y" }}</strong></div>
+        <div class="kpi"><span>Ancienneté</span><strong>{{ personnel.anciennete_annees }} ans</strong></div>
+        <div class="kpi"><span>Formations</span><strong>{{ formations|length }}</strong></div>
+        <div class="kpi"><span>Sanctions</span><strong>{{ sanctions|length }}</strong></div>
+    </div>
+    <div class="fiche-body">
+        <ul class="nav fiche-tabs" role="tablist">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-identite" type="button">Identité</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-formations" type="button">Formations</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-sanctions" type="button">Sanctions</button></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab-identite">
+                <div class="dl-grid">
+                    <div class="dl-item"><span>Nom</span><strong>{{ personnel.nom|default:personnel_full_name }}</strong></div>
+                    <div class="dl-item"><span>Prénom</span><strong>{{ personnel.prenom|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Matricule</span><strong>{{ personnel.matricule }}</strong></div>
+                    <div class="dl-item"><span>Type</span><strong>{{ personnel.get_type_personnel_display }}</strong></div>
+                    <div class="dl-item"><span>Centre</span><strong>{{ personnel.centre.nom|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Téléphone</span><strong>{{ personnel.telephone|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Email</span><strong>{{ personnel.email|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Embauche</span><strong>{{ personnel.date_embauche|date:"d/m/Y" }}</strong></div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="tab-formations">
+                {% if formations %}
+                <table class="table data-table">
+                    <thead><tr><th>Formation</th><th>Organisme</th><th>Début</th></tr></thead>
+                    <tbody>
+                    {% for f in formations %}
+                    <tr><td class="name">{{ f.nom_formation }}</td><td>{{ f.organisme }}</td><td>{{ f.date_debut|date:"d/m/Y" }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}<p class="text-muted mb-0">Aucune formation.</p>{% endif %}
+            </div>
+            <div class="tab-pane fade" id="tab-sanctions">
+                {% if sanctions %}
+                <table class="table data-table">
+                    <thead><tr><th>Date</th><th>Motif</th></tr></thead>
+                    <tbody>
+                    {% for s in sanctions %}
+                    <tr><td>{{ s.date_sanction|date:"d/m/Y" }}</td><td>{{ s.motif|default:s }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}<p class="text-muted mb-0">Aucune sanction.</p>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

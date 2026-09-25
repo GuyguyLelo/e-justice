@@ -1,0 +1,208 @@
+{% extends 'surveillance/base.html' %}
+
+{% block title %}Détections Faciales{% endblock %}
+
+{% block page_title %}Détections Faciales{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Détections Faciales</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'surveillance:dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="camera" class="form-label">Caméra</label>
+                <select class="form-select" id="camera" name="camera">
+                    <option value="">Toutes les caméras</option>
+                    {% for camera in cameras %}
+                    <option value="{{ camera.id }}" {% if request.GET.camera == camera.id|stringformat:"d" %}selected{% endif %}>
+                        {{ camera.nom }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="detenu" class="form-label">Détenu</label>
+                <select class="form-select" id="detenu" name="detenu">
+                    <option value="">Tous les détenus</option>
+                    {% for detenu in detenus %}
+                    <option value="{{ detenu.id }}" {% if request.GET.detenu == detenu.id|stringformat:"d" %}selected{% endif %}>
+                        {{ detenu.nom }} {{ detenu.prenom }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="statut_traite" class="form-label">Statut</label>
+                <select class="form-select" id="statut_traite" name="traitee">
+                    <option value="">Tous</option>
+                    <option value="oui" {% if request.GET.traitee == 'oui' %}selected{% endif %}>Traitées</option>
+                    <option value="non" {% if request.GET.traitee == 'non' %}selected{% endif %}>Non traitées</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="alerte_statut" class="form-label">Alerte</label>
+                <select class="form-select" id="alerte_statut" name="alerte">
+                    <option value="">Toutes</option>
+                    <option value="oui" {% if request.GET.alerte == 'oui' %}selected{% endif %}>Avec alerte</option>
+                    <option value="non" {% if request.GET.alerte == 'non' %}selected{% endif %}>Sans alerte</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filtrer
+                    </button>
+                    <a href="{% url 'surveillance:detections_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Réinitialiser
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des détections -->
+<div class="row">
+    {% for detection in detections %}
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100 {% if detection.est_alerte %}border-danger{% endif %}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    {% if detection.detenu %}
+                        {{ detection.detenu.nom }} {{ detection.detenu.prenom }}
+                    {% else %}
+                        <span class="text-muted">Non identifié</span>
+                    {% endif %}
+                </h6>
+                <div>
+                    {% if detection.est_alerte %}
+                    <span class="badge bg-danger">Alerte</span>
+                    {% endif %}
+                    {% if detection.traitee %}
+                    <span class="badge bg-success">Traité</span>
+                    {% else %}
+                    <span class="badge bg-warning">En attente</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Caméra</small>
+                        <p class="mb-1">{{ detection.camera.nom }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Date</small>
+                        <p class="mb-1">{{ detection.timestamp|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Confiance</small>
+                        <div class="progress mb-1">
+                            <div class="progress-bar {% if detection.confiance >= 80 %}bg-success{% elif detection.confiance >= 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                 style="width: {{ detection.confiance }}%">
+                                {{ detection.confiance|floatformat:1 }}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Zone</small>
+                        <p class="mb-1">
+                            {% if detection.zone %}
+                                {{ detection.zone.nom }}
+                            {% else %}
+                                Non définie
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% if detection.image_detection %}
+                <div class="text-center mt-2">
+                    <img src="{{ detection.image_publique_url }}" 
+                         alt="Détection" 
+                         class="img-fluid rounded" 
+                         style="max-height: 150px;">
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <a href="{% url 'surveillance:detection_detail' detection.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-eye"></i> Détails
+                    </a>
+                    {% if not detection.traitee %}
+                    <a href="{% url 'surveillance:detection_detail' detection.id %}" class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-check"></i> Traiter
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-user-check fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Aucune détection trouvée</h4>
+            <p class="text-muted">
+                {% if request.GET.camera or request.GET.detenu or request.GET.traitee or request.GET.alerte %}
+                Essayez de modifier les filtres.
+                {% else %}
+                Aucune détection faciale n'a été enregistrée.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination des détections">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Début</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Précédent</a>
+        </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active">
+            <span class="page-link">{{ num }}</span>
+        </li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">{{ num }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Suivant</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Fin</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

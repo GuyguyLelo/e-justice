@@ -1,0 +1,401 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}e-Detenu - Administration pénitentiaire · RDC{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/theme-rdc.css' %}">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #0066c7;
+            --secondary-color: #004a94;
+            --success-color: #1b7a3d;
+            --warning-color: #c9a227;
+            --danger-color: #ce1020;
+            --dark-color: #003366;
+            --navbar-color: #004a94;
+            --navbar-gradient: #0066c7;
+        }
+        
+        body {
+            background-color: #eef3f8;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: #12263a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1 1 auto;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: white !important;
+        }
+        
+        .navbar-custom {
+            background: #0066c7 !important;
+            box-shadow: none;
+            border-bottom: none;
+        }
+        
+        .navbar-custom .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-custom .navbar-nav .nav-link:hover {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 0.375rem;
+        }
+        
+        .navbar-custom .navbar-nav .nav-link.active {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 0.375rem;
+        }
+        
+        .navbar-custom .dropdown-menu {
+            background-color: var(--navbar-color);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-custom .dropdown-item {
+            color: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-custom .dropdown-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .navbar-custom .navbar-toggler {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .navbar-custom .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        
+        .navbar-custom .badge {
+            background-color: rgba(255, 255, 255, 0.2) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .navbar-custom .navbar-brand {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        
+        .navbar-brand-sub {
+            display: block;
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            opacity: 0.85;
+            text-transform: uppercase;
+        }
+        
+        .navbar-custom .navbar-brand:hover {
+            color: #f7d116 !important;
+        }
+        
+        .navbar-custom .nav-item {
+            margin: 0 0.25rem;
+        }
+        
+        .navbar-custom .dropdown-toggle::after {
+            border-top-color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .navbar-custom .navbar-nav .nav-link i {
+            margin-right: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border-radius: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--dark-color);
+            border-color: var(--dark-color);
+        }
+        
+        .stats-card {
+            background: #0066c7;
+            color: white;
+            border-bottom: 4px solid #f7d116;
+        }
+        
+        .sidebar {
+            background-color: var(--primary-color);
+            min-height: 100vh;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            margin: 0.125rem 0;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .main-content {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .login-container {
+            min-height: 100vh;
+            background: #0066c7;
+        }
+        
+        .login-card {
+            background: #fff;
+            border-radius: 0;
+            border-top: 6px solid #f7d116;
+            box-shadow: 0 8px 24px rgba(0, 51, 102, 0.25);
+        }
+        
+        .alert {
+            border: none;
+            border-radius: 0.5rem;
+        }
+        
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .table {
+            background-color: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .badge {
+            font-size: 0.75rem;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+        <!-- Navigation principale -->
+        <nav class="navbar navbar-expand-lg navbar-custom">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="{% url 'accueil' %}">
+                    <span class="rdc-star">★</span> e-Justice
+                    <span class="navbar-brand-sub">République Démocratique du Congo</span>
+                </a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accueil' %}">
+                                <i class="bi bi-info-circle"></i> Accueil
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard' %}">
+                                <i class="bi bi-house"></i> Tableau de bord
+                            </a>
+                        </li>
+                        
+                        <!-- Personnel - Accessible aux administrateurs -->
+                        {% if user.role == 'ADMIN' or user.role == 'DIRECTEUR' %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-people"></i> Personnel
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'personnel_list' %}">
+                                    <i class="bi bi-list-ul"></i> Liste du personnel
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'personnel_create' %}">
+                                    <i class="bi bi-plus-circle"></i> Nouveau membre
+                                </a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                        
+                        {% if user.role == 'ADMIN' or user.role == 'DIRECTEUR' %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-badge"></i> Détenus
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'detenus_list' %}">
+                                    <i class="bi bi-list"></i> Liste des détenus
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'detenu_create' %}">
+                                    <i class="bi bi-person-plus"></i> Nouveau détenu
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/admin/">
+                                    <i class="bi bi-tools"></i> Interface Admin
+                                </a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
+
+                        {% if user.role == 'ADMIN' or user.role == 'DIRECTEUR' or user.role == 'AGENT' %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-calendar3"></i> Visites
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'visites_list' %}">
+                                    <i class="bi bi-list-ul"></i> Liste des visites
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'visite_create' %}">
+                                    <i class="bi bi-plus-circle"></i> Nouvelle visite
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'visiteurs_list' %}">
+                                    <i class="bi bi-people"></i> Visiteurs
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'visiteur_create' %}">
+                                    <i class="bi bi-person-plus"></i> Nouveau visiteur
+                                </a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                        {% if user.role == 'MEDECIN' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/soins/consultation/">
+                                <i class="bi bi-heart-pulse"></i> Soins médicaux
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <!-- Surveillance - Accessible uniquement aux admins de centre -->
+                        {% if user.role == 'ADMIN' %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-shield-check"></i> Surveillance
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'surveillance_pro_final' %}">
+                                        <i class="bi bi-camera-video"></i> Surveillance en direct
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'surveillance_detections_list' %}">
+                                        <i class="bi bi-list-ul"></i> Historique des détections
+                                    </a>
+                                </li>
+                                
+                                
+                            </ul>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> {{ user.get_full_name }}
+                                <span class="badge bg-secondary ms-1">{{ user.get_role_display }}</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'profile' %}">
+                                    <i class="bi bi-person"></i> Profil
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'change_password' %}">
+                                    <i class="bi bi-key"></i> Changer le mot de passe
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">
+                                    <i class="bi bi-box-arrow-right"></i> Déconnexion
+                                </a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="rdc-flag-stripe" aria-hidden="true"></div>
+    {% else %}
+        <nav class="navbar navbar-expand-lg navbar-custom">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="{% url 'accueil' %}">
+                    <span class="rdc-star">★</span> e-Justice
+                    <span class="navbar-brand-sub">République Démocratique du Congo</span>
+                </a>
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{% url 'accueil' %}">Accueil</a>
+                    <a class="btn-connexion btn-connexion--nav ms-2" href="{% url 'login' %}">
+                        <i class="bi bi-shield-lock-fill"></i> Connexion
+                    </a>
+                </div>
+            </div>
+        </nav>
+        <div class="rdc-flag-stripe" aria-hidden="true"></div>
+    {% endif %}
+    
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    <!-- Contenu principal -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+    {% if request.resolver_match.url_name != 'accueil' and request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'accounts_login' %}
+    <footer class="institution-footer">
+        République Démocratique du Congo · Ministère de la Justice · Plateforme e-Justice
+    </footer>
+    {% endif %}
+</body>
+</html>

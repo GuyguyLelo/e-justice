@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+
+{% block title %}Surveillance{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            <i class="bi bi-camera-video"></i> Surveillance
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="initializeSystem()">
+                    <i class="bi bi-gear"></i> Initialiser
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="startRecognition()">
+                    <i class="bi bi-play"></i> Démarrer
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="stopRecognition()">
+                    <i class="bi bi-stop"></i> Arrêter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Profils
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="profiles-count">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Détections
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="detections-count">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-person-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Reconnus
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="recognized-count">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Alertes
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="alerts-count">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zone de surveillance -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Caméra de Surveillance</h6>
+                    <div class="dropdown no-arrow">
+                        <span class="badge bg-success" id="camera-status">Prête</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="position-relative" style="height: 500px;">
+                        <video id="webcam" class="w-100 h-100 object-fit-cover" autoplay muted></video>
+                        <canvas id="detection-canvas" class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events: none;"></canvas>
+                        
+                        <!-- Overlay de détection -->
+                        <div class="position-absolute top-0 end-0 p-3">
+                            <div id="detection-info" class="detection-info">
+                                <span class="badge bg-secondary">En attente...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Statut</small>
+                            <div class="fw-bold" id="recognition-status">Arrêté</div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <button class="btn btn-sm btn-primary" onclick="captureFrame()">
+                                <i class="bi bi-camera"></i> Capturer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Journal des détections -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Journal des Détections</h6>
+                </div>
+                <div class="card-body">
+                    <div id="detections-log" style="max-height: 400px; overflow-y: auto;">
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-clock-history fa-2x mb-2"></i>
+                            <p>Aucune détection pour le moment</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let webcamStream = null;
+let recognitionInterval = null;
+let detectionCount = 0;
+let recognizedCount = 0;
+let alertCount = 0;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadStats();
+    initializeWebcam();
+});
+
+function initializeWebcam() {
+    const video = document.getElementById('webcam');
+    
+    navigator.mediaDevices.getUserMedia({ 
+        video: { 
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        } 
+    })
+    .then(stream => {
+        webcamStream = stream;
+        video.srcObject = stream;
+        document.getElementById('camera-status').textContent = 'Active';
+        document.getElementById('camera-status').className = 'badge bg-success';
+    })
+    .catch(err => {
+        console.error("Erreur webcam:", err);
+        document.getElementById('camera-status').textContent = 'Erreur';
+        document.getElementById('camera-status').className = 'badge bg-danger';
+    });
+}
+
+function initializeSystem() {
+    fetch('/surveillance/api/initialiser-systeme/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(`Système initialisé: ${data.profils_crees} profils créés`, 'success');
+                loadStats();
+            } else {
+                showNotification('Erreur: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            showNotification('Erreur lors de l\'initialisation', 'danger');
+        });
+}
+
+function startRecognition() {
+    if (!webcamStream) {
+        showNotification('Veuillez d\'abord activer la webcam', 'warning');
+        return;
+    }
+    
+    document.getElementById('recognition-status').textContent = 'Reconnaissance en cours...';
+    document.getElementById('detection-info').innerHTML = '<span class="badge bg-warning">Analyse...</span>';
+    
+    // Démarrer la reconnaissance toutes les 2 secondes
+    recognitionInterval = setInterval(performRecognition, 2000);
+    
+    showNotification('Reconnaissance faciale démarrée', 'success');
+}
+
+function stopRecognition() {
+    if (recognitionInterval) {
+        clearInterval(recognitionInterval);
+        recognitionInterval = null;
+    }
+    
+    document.getElementById('recognition-status').textContent = 'Arrêté';
+    document.getElementById('detection-info').innerHTML = '<span class="badge bg-secondary">En attente...</span>';
+    
+    showNotification('Reconnaissance faciale arrêtée', 'info');
+}
+
+function performRecognition() {
+    const video = document.getElementById('webcam');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    // Convertir en base64
+    const imageData = canvas.toDataURL('image/jpeg');
+    
+    // Envoyer pour reconnaissance
+    fetch('/surveillance/api/detecter-visage/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            image: imageData,
+            camera_id: 1
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            processDetections(data.detections);
+        }
+    })
+    .catch(error => {
+        console.error('Erreur reconnaissance:', error);
+    });
+}
+
+function processDetections(detections) {
+    detectionCount++;
+    
+    if (detections.length > 0) {
+        detections.forEach(detection => {
+            if (detection.is_alert) {
+                alertCount++;
+                addDetectionLog(detection.name, 'alert', detection.confiance);
+            } else {
+                recognizedCount++;
+                addDetectionLog(detection.name, 'recognized', detection.confiance);
+            }
+        });
+        
+        // Mettre à jour l'affichage
+        const lastDetection = detections[detections.length - 1];
+        if (lastDetection.is_alert) {
+            document.getElementById('detection-info').innerHTML = `
+                <span class="badge bg-danger">
+                    <i class="bi bi-exclamation-triangle"></i> ${lastDetection.name}
+                </span>
+            `;
+        } else {
+            document.getElementById('detection-info').innerHTML = `
+                <span class="badge bg-success">
+                    <i class="bi bi-person-check"></i> ${lastDetection.name} (${lastDetection.confidence.toFixed(1)}%)
+                </span>
+            `;
+        }
+    } else {
+        addDetectionLog('Aucune détection', 'none', 0);
+    }
+    
+    updateStats();
+}
+
+function captureFrame() {
+    const video = document.getElementById('webcam');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    // Télécharger l'image
+    const link = document.createElement('a');
+    link.download = `capture_${new Date().getTime()}.jpg`;
+    link.href = canvas.toDataURL();
+    link.click();
+    
+    showNotification('Image capturée', 'success');
+}
+
+function addDetectionLog(name, type, confidence) {
+    const log = document.getElementById('detections-log');
+    const time = new Date().toLocaleTimeString();
+    
+    const badgeClass = type === 'alert' ? 'bg-danger' : type === 'recognized' ? 'bg-success' : 'bg-secondary';
+    const icon = type === 'alert' ? 'exclamation-triangle' : type === 'recognized' ? 'person-check' : 'clock';
+    
+    const entry = document.createElement('div');
+    entry.className = 'border-bottom pb-2 mb-2';
+    entry.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge ${badgeClass}">
+                    <i class="bi bi-${icon}"></i> ${name}
+                </span>
+                ${confidence > 0 ? `<small class="text-muted ms-2">${confidence.toFixed(1)}%</small>` : ''}
+            </div>
+            <small class="text-muted">${time}</small>
+        </div>
+    `;
+    
+    // Ajouter au début
+    if (log.children[0].classList.contains('text-center')) {
+        log.innerHTML = '';
+    }
+    log.insertBefore(entry, log.firstChild);
+    
+    // Limiter à 20 entrées
+    while (log.children.length > 20) {
+        log.removeChild(log.lastChild);
+    }
+}
+
+function loadStats() {
+    fetch('/surveillance/api/tester-reconnaissance/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('profiles-count').textContent = data.statistiques.total_profils;
+            }
+        })
+        .catch(error => console.error('Erreur stats:', error));
+}
+
+function updateStats() {
+    document.getElementById('detections-count').textContent = detectionCount;
+    document.getElementById('recognized-count').textContent = recognizedCount;
+    document.getElementById('alerts-count').textContent = alertCount;
+}
+
+function showNotification(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Nettoyer quand on quitte
+window.addEventListener('beforeunload', function() {
+    stopRecognition();
+    if (webcamStream) {
+        webcamStream.getTracks().forEach(track => track.stop());
+    }
+});
+</script>
+
+<style>
+.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+
+.detection-info {
+    background: rgba(0,0,0,0.8);
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+    backdrop-filter: blur(5px);
+}
+
+#detections-log::-webkit-scrollbar {
+    width: 6px;
+}
+
+#detections-log::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#detections-log::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+#detections-log::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+</style>
+{% endblock %}

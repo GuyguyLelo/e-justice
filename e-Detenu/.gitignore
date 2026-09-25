@@ -1,0 +1,9 @@
+logs/
+logs/
+*.log
+__pycache__/
+.env
+*.sqlite3
+media/
+staticfiles/
+.idea/

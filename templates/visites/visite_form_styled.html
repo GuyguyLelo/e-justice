@@ -1,0 +1,570 @@
+{% extends 'visites/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}{% if visite %}Modifier la visite{% else %}Programmer une nouvelle visite{% endif %}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'visites_list' %}" class="btn btn-outline-primary">
+    <i class="bi bi-arrow-left"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .visit-form-container {
+        background: linear-gradient(135deg, #0066c7 0%, #004a94 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .visit-form-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 2rem;
+        box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #0066c7 0%, #004a94 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+    }
+    
+    .form-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+    
+    .form-header h2 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .form-header p {
+        margin: 0.5rem 0 0 0;
+        opacity: 0.9;
+        font-size: 1.1rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .form-body {
+        padding: 3rem;
+    }
+    
+    .form-section {
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: rgba(248, 249, 250, 0.8);
+        border-radius: 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        position: relative;
+    }
+    
+    .form-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(135deg, #0066c7 0%, #004a94 100%);
+        border-radius: 0 2px 2px 0;
+    }
+    
+    .section-title {
+        color: #2c3e50;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .section-title i {
+        background: linear-gradient(135deg, #0066c7 0%, #004a94 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.5rem;
+    }
+    
+    .form-floating {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-floating .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 0.75rem;
+        padding: 1rem 0.75rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+    
+    .form-floating .form-control:focus {
+        border-color: #0066c7;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        background: white;
+    }
+    
+    .form-floating label {
+        color: #6c757d;
+        font-weight: 500;
+        padding: 1rem 0.75rem;
+    }
+    
+    .form-floating .form-control:focus ~ label,
+    .form-floating .form-control:not(:placeholder-shown) ~ label {
+        color: #0066c7;
+        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+    
+    .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 0.75rem;
+        padding: 1rem 0.75rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+    }
+    
+    .form-select:focus {
+        border-color: #0066c7;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        background: white;
+    }
+    
+    .form-check {
+        margin-bottom: 1rem;
+    }
+    
+    .form-check-input {
+        border: 2px solid #e9ecef;
+        border-radius: 0.375rem;
+    }
+    
+    .form-check-input:checked {
+        background-color: #0066c7;
+        border-color: #0066c7;
+    }
+    
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #0066c7 0%, #004a94 100%);
+        border: none;
+        border-radius: 1rem;
+        padding: 1rem 3rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .btn-submit:hover::before {
+        left: 100%;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 1rem 2rem rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-submit:active {
+        transform: translateY(0);
+    }
+    
+    .form-actions {
+        text-align: center;
+        padding: 2rem 0;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        margin-top: 2rem;
+    }
+    
+    .progress-indicator {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 2rem;
+        gap: 1rem;
+    }
+    
+    .progress-step {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .progress-step.active {
+        background: linear-gradient(135deg, #0066c7 0%, #004a94 100%);
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .progress-step.completed {
+        background: #28a745;
+        color: white;
+    }
+    
+    .progress-step::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 100%;
+        width: 2rem;
+        height: 2px;
+        background: #e9ecef;
+        transform: translateY(-50%);
+    }
+    
+    .progress-step:last-child::after {
+        display: none;
+    }
+    
+    .progress-step.completed::after {
+        background: #28a745;
+    }
+    
+    .form-floating .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        display: block;
+    }
+    
+    .form-floating .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+    
+    .form-floating .form-control.is-invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    
+    @media (max-width: 768px) {
+        .form-body {
+            padding: 1.5rem;
+        }
+        
+        .form-section {
+            padding: 1.5rem;
+        }
+        
+        .form-header {
+            padding: 1.5rem;
+        }
+        
+        .form-header h2 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content_visites %}
+<div class="visit-form-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8">
+                <div class="visit-form-card">
+                    <!-- En-tête du formulaire -->
+                    <div class="form-header">
+                        <h2>
+                            <i class="bi bi-calendar-plus"></i>
+                            {{ title }}
+                        </h2>
+                        <p>Remplissez les informations pour programmer la visite</p>
+                    </div>
+                    
+                    <!-- Indicateur de progression -->
+                    <div class="progress-indicator">
+                        <div class="progress-step active">
+                            <i class="bi bi-1"></i>
+                        </div>
+                        <div class="progress-step">
+                            <i class="bi bi-2"></i>
+                        </div>
+                        <div class="progress-step">
+                            <i class="bi bi-3"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Corps du formulaire -->
+                    <div class="form-body">
+                        <form method="post" id="visiteForm">
+                            {% csrf_token %}
+                            
+                            <!-- Section 1: Informations principales -->
+                            <div class="form-section">
+                                <h3 class="section-title">
+                                    <i class="bi bi-info-circle"></i>
+                                    Informations principales
+                                </h3>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.detenu }}
+                                            <label for="{{ form.detenu.id_for_label }}">Détenu *</label>
+                                            {% if form.detenu.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ form.detenu.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.visiteur }}
+                                            <label for="{{ form.visiteur.id_for_label }}">Visiteur *</label>
+                                            {% if form.visiteur.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ form.visiteur.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.date_visite }}
+                                            <label for="{{ form.date_visite.id_for_label }}">Date de visite *</label>
+                                            {% if form.date_visite.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ form.date_visite.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.heure_visite }}
+                                            <label for="{{ form.heure_visite.id_for_label }}">Heure de visite *</label>
+                                            {% if form.heure_visite.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ form.heure_visite.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Section 2: Détails de la visite -->
+                            <div class="form-section">
+                                <h3 class="section-title">
+                                    <i class="bi bi-calendar-event"></i>
+                                    Détails de la visite
+                                </h3>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.duree_visite }}
+                                            <label for="{{ form.duree_visite.id_for_label }}">Durée (minutes) *</label>
+                                            {% if form.duree_visite.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ form.duree_visite.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.type_visite }}
+                                            <label for="{{ form.type_visite.id_for_label }}">Type de visite *</label>
+                                            {% if form.type_visite.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ form.type_visite.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-floating">
+                                    {{ form.motif_visite }}
+                                    <label for="{{ form.motif_visite.id_for_label }}">Motif de la visite</label>
+                                    {% if form.motif_visite.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.motif_visite.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Section 3: Objets et observations -->
+                            <div class="form-section">
+                                <h3 class="section-title">
+                                    <i class="bi bi-box"></i>
+                                    Objets et observations
+                                </h3>
+                                
+                                <div class="form-floating">
+                                    {{ form.objets_apportes }}
+                                    <label for="{{ form.objets_apportes.id_for_label }}">Objets apportés</label>
+                                    {% if form.objets_apportes.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.objets_apportes.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="form-floating">
+                                    {{ form.observations }}
+                                    <label for="{{ form.observations.id_for_label }}">Observations</label>
+                                    {% if form.observations.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.observations.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="form-check">
+                                    {{ form.autorisation_speciale }}
+                                    <label class="form-check-label" for="{{ form.autorisation_speciale.id_for_label }}">
+                                        Autorisation spéciale requise
+                                    </label>
+                                    {% if form.autorisation_speciale.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.autorisation_speciale.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Actions du formulaire -->
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-submit">
+                                    <i class="bi bi-check-circle"></i>
+                                    {% if visite %}Mettre à jour{% else %}Programmer la visite{% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Animation d'entrée
+    $('.visit-form-card').hide().fadeIn(1000);
+    
+    // Validation en temps réel
+    $('form#visiteForm').on('submit', function(e) {
+        let isValid = true;
+        
+        // Vérifier les champs requis
+        $('.form-floating .form-control[required]').each(function() {
+            if (!$(this).val()) {
+                $(this).addClass('is-invalid');
+                isValid = false;
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            $('html, body').animate({
+                scrollTop: $('.is-invalid').first().offset().top - 100
+            }, 500);
+        }
+    });
+    
+    // Animation des étapes
+    $('.form-section').each(function(index) {
+        $(this).css('opacity', '0').css('transform', 'translateY(20px)');
+        setTimeout(() => {
+            $(this).animate({
+                opacity: 1
+            }, 500).css('transform', 'translateY(0)');
+        }, index * 200);
+    });
+    
+    // Mise à jour de l'indicateur de progression
+    function updateProgress() {
+        const sections = $('.form-section');
+        const steps = $('.progress-step');
+        
+        sections.each(function(index) {
+            const section = $(this);
+            const inputs = section.find('.form-control[required]');
+            let completed = true;
+            
+            inputs.each(function() {
+                if (!$(this).val()) {
+                    completed = false;
+                    return false;
+                }
+            });
+            
+            if (completed && inputs.length > 0) {
+                steps.eq(index).addClass('completed').removeClass('active');
+                if (index < steps.length - 1) {
+                    steps.eq(index + 1).addClass('active');
+                }
+            }
+        });
+    }
+    
+    // Écouter les changements dans les champs
+    $('.form-control').on('input change', function() {
+        updateProgress();
+    });
+    
+    // Initialiser la progression
+    updateProgress();
+});
+</script>
+{% endblock %}

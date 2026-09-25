@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+
+{% block title %}Surveillance{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de page -->
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            <i class="bi bi-camera-video"></i> Surveillance
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshAll()">
+                    <i class="bi bi-arrow-clockwise"></i> Actualiser
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Caméras
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-cameras">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-camera-video fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Actives
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="active-cameras">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Détections
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="detections-count">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-person-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Alertes
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="alerts-count">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grille des caméras -->
+    <div class="row" id="cameras-grid">
+        <!-- Les caméras seront chargées ici -->
+    </div>
+</div>
+
+<!-- Modal pour les détails -->
+<div class="modal fade" id="cameraModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Détails de la Caméra</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="camera-details">
+                <!-- Contenu dynamique -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let refreshInterval = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadCameras();
+    loadStats();
+    
+    // Rafraîchir toutes les 30 secondes
+    refreshInterval = setInterval(function() {
+        loadCameras();
+        loadStats();
+    }, 30000);
+});
+
+function loadCameras() {
+    fetch('/api/surveillance/cameras/')
+        .then(response => response.json())
+        .then(data => {
+            displayCameras(data.results || data);
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            document.getElementById('cameras-grid').innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Erreur lors du chargement des caméras
+                    </div>
+                </div>
+            `;
+        });
+}
+
+function loadStats() {
+    // Statistiques des caméras
+    fetch('/surveillance/api/camera-stats/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-cameras').textContent = data.total || 0;
+            document.getElementById('active-cameras').textContent = data.actives || 0;
+        })
+        .catch(error => console.error('Erreur stats caméras:', error));
+    
+    // Statistiques des détections
+    fetch('/surveillance/api/detection-stats/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('detections-count').textContent = data.aujourd_hui || 0;
+        })
+        .catch(error => console.error('Erreur stats détections:', error));
+    
+    // Statistiques des alertes
+    fetch('/surveillance/api/alerte-stats/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('alerts-count').textContent = data.actives || 0;
+        })
+        .catch(error => console.error('Erreur stats alertes:', error));
+}
+
+function displayCameras(cameras) {
+    const grid = document.getElementById('cameras-grid');
+    
+    if (!cameras || cameras.length === 0) {
+        grid.innerHTML = `
+            <div class="col-12">
+                <div class="card shadow mb-4">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-camera-video-off fa-3x text-gray-300 mb-3"></i>
+                        <h5 class="text-gray-400">Aucune caméra configurée</h5>
+                        <p class="text-gray-400">Commencez par ajouter des caméras au système.</p>
+                        <a href="/admin/surveillance/camera/add/" class="btn btn-primary">
+                            <i class="bi bi-plus"></i> Ajouter une caméra
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = cameras.map(camera => `
+        <div class="col-xl-4 col-lg-6 mb-4">
+            <div class="card shadow border-left-${camera.statut === 'ACTIVE' ? 'success' : 'secondary'} h-100">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">${camera.nom}</h6>
+                    <div class="dropdown no-arrow">
+                        <span class="badge bg-${camera.statut === 'ACTIVE' ? 'success' : 'secondary'}">
+                            ${camera.statut === 'ACTIVE' ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Flux vidéo -->
+                    <div class="position-relative" style="height: 200px;">
+                        <video id="webcam-${camera.id}" class="w-100 h-100 object-fit-cover" autoplay muted></video>
+                        <div class="position-absolute top-0 end-0 p-2">
+                            <div class="detection-info" id="detection-${camera.id}">
+                                <span class="badge bg-secondary">En attente...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Emplacement</small>
+                            <div class="fw-bold">${camera.emplacement || 'Non défini'}</div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <button class="btn btn-sm btn-primary" onclick="startDetection(${camera.id})">
+                                <i class="bi bi-play"></i> Détecter
+                            </button>
+                            <button class="btn btn-sm btn-info ms-1" onclick="showCameraDetails(${camera.id})">
+                                <i class="bi bi-info"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Initialiser les webcams
+    initializeWebcams();
+}
+
+function initializeWebcams() {
+    // Activer la webcam pour la première caméra active
+    const cameras = document.querySelectorAll('[id^="webcam-"]');
+    cameras.forEach((video, index) => {
+        if (index === 0) { // Pour l'instant, utiliser la webcam pour la première caméra
+            startWebcam(video);
+        }
+    });
+}
+
+function startWebcam(videoElement) {
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            videoElement.srcObject = stream;
+        })
+        .catch(err => {
+            console.error("Erreur webcam:", err);
+            // Utiliser une image placeholder si la webcam n'est pas disponible
+            videoElement.poster = `https://picsum.photos/seed/webcam-${Date.now()}/400/200.jpg`;
+        });
+}
+
+function startDetection(cameraId) {
+    const detectionDiv = document.getElementById(`detection-${cameraId}`);
+    detectionDiv.innerHTML = '<span class="badge bg-warning">Analyse...</span>';
+    
+    // Simuler une détection
+    setTimeout(() => {
+        const detections = [
+            { name: 'Jean DUPONT', confidence: 95, alert: false },
+            { name: 'Inconnu', confidence: 0, alert: true },
+            { name: 'Aucune détection', confidence: 0, alert: false }
+        ];
+        
+        const randomDetection = detections[Math.floor(Math.random() * detections.length)];
+        
+        if (randomDetection.alert) {
+            detectionDiv.innerHTML = `
+                <span class="badge bg-danger">
+                    <i class="bi bi-exclamation-triangle"></i> ${randomDetection.name}
+                </span>
+            `;
+        } else if (randomDetection.confidence > 0) {
+            detectionDiv.innerHTML = `
+                <span class="badge bg-success">
+                    <i class="bi bi-person-check"></i> ${randomDetection.name} (${randomDetection.confidence}%)
+                </span>
+            `;
+        } else {
+            detectionDiv.innerHTML = '<span class="badge bg-secondary">Aucune détection</span>';
+        }
+    }, 2000);
+}
+
+function showCameraDetails(cameraId) {
+    // Afficher les détails de la caméra dans le modal
+    document.getElementById('camera-details').innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Informations générales</h6>
+                <p><strong>ID:</strong> ${cameraId}</p>
+                <p><strong>Statut:</strong> <span class="badge bg-success">Active</span></p>
+                <p><strong>Type:</strong> IP Camera</p>
+            </div>
+            <div class="col-md-6">
+                <h6>Configuration</h6>
+                <p><strong>Résolution:</strong> 1920x1080</p>
+                <p><strong>FPS:</strong> 30</p>
+                <p><strong>Qualité:</strong> Haute</p>
+            </div>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('cameraModal'));
+    modal.show();
+}
+
+function refreshAll() {
+    loadCameras();
+    loadStats();
+}
+
+// Nettoyer l'intervalle quand on quitte la page
+window.addEventListener('beforeunload', function() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+});
+</script>
+
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+.detection-info {
+    background: rgba(0,0,0,0.7);
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: white;
+    font-size: 0.8rem;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s;
+}
+</style>
+{% endblock %}

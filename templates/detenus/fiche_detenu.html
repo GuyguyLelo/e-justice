@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Fiche d'identification du detenu</title>
+    <style>
+        @page { size: A4; margin: 1.4cm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #12263a; }
+        h1 { font-size: 16px; text-align: center; margin: 0 0 4px 0; color: #004a94; }
+        .sub { text-align: center; font-size: 9px; color: #5b6b7c; margin: 0 0 10px 0; }
+        .banner { background: #0066c7; color: #fff; padding: 8px; text-align: center; margin-bottom: 10px; }
+        .banner .mat { font-size: 20px; font-weight: bold; }
+        table.layout { width: 100%; border-collapse: collapse; }
+        td.label { width: 28%; font-size: 8px; text-transform: uppercase; color: #5b6b7c; padding: 3px 6px 0 0; }
+        td.val { width: 22%; font-size: 11px; font-weight: bold; padding: 0 8px 6px 0; }
+        .section { font-size: 11px; font-weight: bold; color: #004a94; border-bottom: 2px solid #f7d116; padding-bottom: 3px; margin: 12px 0 6px 0; }
+        .photo { width: 110px; height: 130px; border: 1px solid #333; }
+        .footer { margin-top: 18px; border-top: 1px solid #ccc; padding-top: 6px; font-size: 8px; color: #5b6b7c; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>FICHE D'IDENTIFICATION DU DETENU</h1>
+    <p class="sub">e-Justice · e-Detenu · Republique Democratique du Congo<br>
+    Emise le {{ date_generation|date:"d/m/Y H:i" }}{% if fiche %} · Fiche {{ fiche.numero_fiche }}{% endif %}</p>
+
+    <div class="banner">
+        <div class="mat">{{ detenu.matricule }}</div>
+        {{ detenu.get_statut_display }} · Cellule {{ detenu.cellule|default:"—" }}
+    </div>
+
+    <table class="layout">
+        <tr>
+            <td style="width:75%; vertical-align:top;">
+                <div class="section">IDENTITE</div>
+                <table class="layout">
+                    <tr>
+                        <td class="label">Nom</td><td class="label">Prenom</td><td class="label">Sexe</td><td class="label">Age</td>
+                    </tr>
+                    <tr>
+                        <td class="val">{{ detenu.nom|upper }}</td>
+                        <td class="val">{{ detenu.prenom }}</td>
+                        <td class="val">{{ detenu.get_sexe_display }}</td>
+                        <td class="val">{{ age }} ans</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Naissance</td><td class="label">Lieu</td><td class="label">Nationalite</td><td class="label">Profession</td>
+                    </tr>
+                    <tr>
+                        <td class="val">{{ detenu.date_naissance|date:"d/m/Y" }}</td>
+                        <td class="val">{{ detenu.lieu_naissance|default:"—" }}</td>
+                        <td class="val">{{ detenu.nationalite|default:"—" }}</td>
+                        <td class="val">{{ detenu.profession|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label" colspan="3">Adresse</td><td class="label">Telephone</td>
+                    </tr>
+                    <tr>
+                        <td class="val" colspan="3">{{ detenu.adresse|default:"—" }}</td>
+                        <td class="val">{{ detenu.telephone|default:"—" }}</td>
+                    </tr>
+                </table>
+            </td>
+            <td style="width:25%; vertical-align:top; text-align:center;">
+                {% if photo_url %}
+                <img src="{{ photo_url }}" width="110" height="130" />
+                {% else %}
+                <div style="width:110px; height:130px; border:1px solid #333; font-size:9px; color:#888;">Sans photo</div>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <div class="section">INFORMATIONS JUDICIAIRES</div>
+    <table class="layout">
+        <tr>
+            <td class="label">Arrestation</td><td class="label">Incarceration</td>
+            <td class="label">Duree detenue</td><td class="label">Regime</td>
+        </tr>
+        <tr>
+            <td class="val">{{ detenu.date_arrestation|date:"d/m/Y" }}</td>
+            <td class="val">{{ detenu.date_incarceration|date:"d/m/Y" }}</td>
+            <td class="val">{{ duree_detention }} jours</td>
+            <td class="val">{{ detenu.get_regime_display }}</td>
+        </tr>
+        <tr>
+            <td class="label">Tribunal</td><td class="label">N dossier</td>
+            <td class="label">Peine</td><td class="label">Liberation prevue</td>
+        </tr>
+        <tr>
+            <td class="val">{{ detenu.tribunal|default:"—" }}</td>
+            <td class="val">{{ detenu.numero_dossier|default:"—" }}</td>
+            <td class="val">{% if detenu.duree_peine_mois %}{{ detenu.duree_peine_mois }} mois{% else %}—{% endif %}</td>
+            <td class="val">{{ detenu.date_liberation_prevue|date:"d/m/Y"|default:"—" }}</td>
+        </tr>
+        <tr>
+            <td class="label" colspan="4">Motif d'incarceration</td>
+        </tr>
+        <tr>
+            <td class="val" colspan="4">{{ detenu.motif_incarceration }}</td>
+        </tr>
+        <tr>
+            <td class="label">Avocat</td><td class="val" colspan="3">{{ detenu.avocat|default:"—" }} — {{ detenu.telephone_avocat|default:"" }}</td>
+        </tr>
+    </table>
+
+    <div class="section">DETENTION</div>
+    <table class="layout">
+        <tr>
+            <td class="label">Centre</td><td class="label">Cellule</td><td class="label">Statut</td><td class="label">Liberation effective</td>
+        </tr>
+        <tr>
+            <td class="val">{{ detenu.centre.nom|default:"—" }}</td>
+            <td class="val">{{ detenu.cellule|default:"—" }}</td>
+            <td class="val">{{ detenu.get_statut_display }}</td>
+            <td class="val">{{ detenu.date_liberation_effective|date:"d/m/Y"|default:"—" }}</td>
+        </tr>
+    </table>
+
+    <div class="section">SANTE ET BIOMETRIE</div>
+    <table class="layout">
+        <tr>
+            <td class="label">Groupe sanguin</td><td class="label">Taille</td><td class="label">Poids</td><td class="label">Yeux</td>
+        </tr>
+        <tr>
+            <td class="val">{{ detenu.groupe_sanguin|default:"—" }}</td>
+            <td class="val">{% if detenu.taille %}{{ detenu.taille }} cm{% else %}—{% endif %}</td>
+            <td class="val">{% if detenu.poids %}{{ detenu.poids }} kg{% else %}—{% endif %}</td>
+            <td class="val">{{ detenu.get_couleur_yeux_display|default:"—" }}</td>
+        </tr>
+        <tr>
+            <td class="label">Cheveux</td><td class="label">Type</td><td class="label">Teint</td><td class="label">Allergies</td>
+        </tr>
+        <tr>
+            <td class="val">{{ detenu.get_couleur_cheveux_display|default:"—" }}</td>
+            <td class="val">{{ detenu.get_type_cheveux_display|default:"—" }}</td>
+            <td class="val">{{ detenu.get_couleur_peau_display|default:"—" }}</td>
+            <td class="val">{{ detenu.allergies|default:"RAS" }}</td>
+        </tr>
+        <tr>
+            <td class="label" colspan="4">Cicatrices / maladies</td>
+        </tr>
+        <tr>
+            <td class="val" colspan="4">{{ detenu.cicatrices|default:"RAS" }} · {{ detenu.maladies_chroniques|default:"RAS" }}</td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        Document officiel e-Detenu · usage interne · valide sans signature
+        {% if utilisateur %} · Etablie par {{ utilisateur.get_full_name }}{% endif %}
+    </div>
+</body>
+</html>

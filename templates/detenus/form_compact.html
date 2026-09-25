@@ -1,0 +1,421 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - e-Detenu{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fiche-form { padding: 0.6rem 0.9rem 1rem; }
+    .fiche-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.55rem;
+        flex-wrap: wrap;
+    }
+    .fiche-toolbar h1 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #003366;
+    }
+    .fiche-toolbar .btn {
+        border-radius: 0;
+        font-size: 0.75rem;
+        padding: 0.28rem 0.7rem;
+        font-weight: 600;
+    }
+    .fiche-body { background: #fff; border: 1px solid #d5dee8; }
+    .fiche-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        border-bottom: 2px solid #0066c7;
+        background: #f4f8fc;
+    }
+    .fiche-tabs .nav-link {
+        border: none;
+        border-radius: 0;
+        color: #004a94;
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.5rem 0.85rem;
+    }
+    .fiche-tabs .nav-link.active { background: #0066c7; color: #fff; }
+    .tab-pane { padding: 0.85rem; }
+    .fg { margin-bottom: 0.55rem; }
+    .fg label {
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #004a94;
+        margin-bottom: 0.15rem;
+    }
+    .fg label .req { color: #ce1020; }
+    .fg .form-control, .fg .form-select {
+        border-radius: 0;
+        height: 2.1rem;
+        font-size: 0.85rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .fg textarea.form-control { height: auto; min-height: 4.2rem; }
+    .dropzone {
+        border: 1px dashed #0066c7;
+        background: #f4f8fc;
+        padding: 0.75rem;
+        text-align: center;
+    }
+    .dropzone strong { color: #004a94; font-size: 0.82rem; }
+    .dropzone p { margin: 0.2rem 0 0.45rem; font-size: 0.72rem; color: #5b6b7c; }
+    .dropzone .form-control { height: auto; }
+    .photos { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+    .photo-preview { max-height: 120px; border: 1px solid #d5dee8; }
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.4rem;
+        padding: 0.65rem 0.85rem;
+        border-top: 3px solid #f7d116;
+        background: #f8fafc;
+    }
+    .form-actions .btn { border-radius: 0; font-weight: 700; font-size: 0.78rem; }
+    @media (max-width: 768px) { .photos { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fiche-form">
+    <div class="fiche-toolbar">
+        <h1><i class="bi bi-person-plus"></i> {{ title }}</h1>
+        <a href="{% url 'detenus_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Liste</a>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="detenuForm" novalidate>
+        {% csrf_token %}
+        <div class="fiche-body">
+            <ul class="nav fiche-tabs" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-identite" type="button">Identité</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-justice" type="button">Judiciaire &amp; dossier</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-detention" type="button">Détention</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-sante" type="button">Santé &amp; biométrie</button></li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="tab-identite">
+                    <div class="row g-2">
+                        <div class="col-md-6 fg">
+                            <label for="{{ form.centre.id_for_label }}">Centre</label>
+                            {{ form.centre }}
+                            {% if user_centre %}<small class="text-muted">Centre assigné : {{ user_centre.nom }}</small>{% endif %}
+                            {{ form.centre.errors }}
+                        </div>
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.matricule.id_for_label }}">Matricule <span class="req">*</span></label>
+                            {{ form.matricule }}{{ form.matricule.errors }}
+                        </div>
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.sexe.id_for_label }}">Sexe <span class="req">*</span></label>
+                            {{ form.sexe }}{{ form.sexe.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.nom.id_for_label }}">Nom <span class="req">*</span></label>
+                            {{ form.nom }}{{ form.nom.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.prenom.id_for_label }}">Prénom <span class="req">*</span></label>
+                            {{ form.prenom }}{{ form.prenom.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.date_naissance.id_for_label }}">Date de naissance <span class="req">*</span></label>
+                            {{ form.date_naissance }}{{ form.date_naissance.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.lieu_naissance.id_for_label }}">Lieu de naissance <span class="req">*</span></label>
+                            {{ form.lieu_naissance }}{{ form.lieu_naissance.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.nationalite.id_for_label }}">Nationalité</label>
+                            {{ form.nationalite }}{{ form.nationalite.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.profession.id_for_label }}">Profession</label>
+                            {{ form.profession }}{{ form.profession.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.telephone.id_for_label }}">Téléphone</label>
+                            {{ form.telephone }}{{ form.telephone.errors }}
+                        </div>
+                        <div class="col-md-8 fg">
+                            <label for="{{ form.adresse.id_for_label }}">Adresse</label>
+                            {{ form.adresse }}{{ form.adresse.errors }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tab-justice">
+                    <div class="row g-2">
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.date_arrestation.id_for_label }}">Arrestation <span class="req">*</span></label>
+                            {{ form.date_arrestation }}{{ form.date_arrestation.errors }}
+                        </div>
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.date_incarceration.id_for_label }}">Incarcération <span class="req">*</span></label>
+                            {{ form.date_incarceration }}{{ form.date_incarceration.errors }}
+                        </div>
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.tribunal.id_for_label }}">Tribunal / juridiction <span class="req">*</span></label>
+                            {{ form.tribunal }}{{ form.tribunal.errors }}
+                        </div>
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.regime.id_for_label }}">Régime <span class="req">*</span></label>
+                            {{ form.regime }}{{ form.regime.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.numero_dossier.id_for_label }}">N° de dossier</label>
+                            {{ form.numero_dossier }}{{ form.numero_dossier.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.avocat.id_for_label }}">Avocat</label>
+                            {{ form.avocat }}{{ form.avocat.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.telephone_avocat.id_for_label }}">Tél. avocat</label>
+                            {{ form.telephone_avocat }}{{ form.telephone_avocat.errors }}
+                        </div>
+                        <div class="col-12 fg">
+                            <label for="{{ form.motif_incarceration.id_for_label }}">Motif d'incarcération <span class="req">*</span></label>
+                            {{ form.motif_incarceration }}{{ form.motif_incarceration.errors }}
+                        </div>
+                        <div class="col-12 fg">
+                            <label><i class="bi bi-folder2-open"></i> Dossier du détenu</label>
+                            <div class="dropzone">
+                                <strong>Joindre le dossier judiciaire</strong>
+                                <p>PDF, Word, ODT, JPEG ou PNG — 10 Mo maximum. Facultatif à l’enregistrement, modifiable plus tard.</p>
+                                {{ form.dossier }}
+                                <div id="dossier-name" class="small mt-1 text-primary"></div>
+                                {% if detenu and detenu.dossier %}
+                                <div class="mt-2">
+                                    <a href="{% url 'download_dossier' detenu.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-download"></i> Dossier actuel
+                                    </a>
+                                </div>
+                                {% endif %}
+                                {{ form.dossier.errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tab-detention">
+                    <div class="row g-2">
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.cellule.id_for_label }}">Cellule <span class="req">*</span></label>
+                            {{ form.cellule }}
+                            <small class="text-muted">Pavillons du centre sélectionné{% if user_centre %} ({{ user_centre.nom }}){% endif %}</small>
+                            {{ form.cellule.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.statut.id_for_label }}">Statut <span class="req">*</span></label>
+                            {{ form.statut }}{{ form.statut.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.duree_peine_mois.id_for_label }}">Durée de peine (mois)</label>
+                            {{ form.duree_peine_mois }}{{ form.duree_peine_mois.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.date_liberation_prevue.id_for_label }}">Libération prévue</label>
+                            {{ form.date_liberation_prevue }}{{ form.date_liberation_prevue.errors }}
+                        </div>
+                        {% if action == 'Modifier' %}
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.date_liberation_effective.id_for_label }}">Libération effective</label>
+                            {{ form.date_liberation_effective }}{{ form.date_liberation_effective.errors }}
+                        </div>
+                        <div class="col-md-4 fg">
+                            <label for="{{ form.motif_liberation.id_for_label }}">Motif de libération</label>
+                            {{ form.motif_liberation }}{{ form.motif_liberation.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tab-sante">
+                    <div class="row g-2">
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.groupe_sanguin.id_for_label }}">Groupe sanguin</label>
+                            {{ form.groupe_sanguin }}{{ form.groupe_sanguin.errors }}
+                        </div>
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.taille.id_for_label }}">Taille (cm)</label>
+                            {{ form.taille }}{{ form.taille.errors }}
+                        </div>
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.poids.id_for_label }}">Poids (kg)</label>
+                            {{ form.poids }}{{ form.poids.errors }}
+                        </div>
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.couleur_yeux.id_for_label }}">Yeux</label>
+                            {{ form.couleur_yeux }}{{ form.couleur_yeux.errors }}
+                        </div>
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.couleur_cheveux.id_for_label }}">Cheveux</label>
+                            {{ form.couleur_cheveux }}{{ form.couleur_cheveux.errors }}
+                        </div>
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.type_cheveux.id_for_label }}">Type de cheveux</label>
+                            {{ form.type_cheveux }}{{ form.type_cheveux.errors }}
+                        </div>
+                        <div class="col-md-3 fg">
+                            <label for="{{ form.couleur_peau.id_for_label }}">Teint</label>
+                            {{ form.couleur_peau }}{{ form.couleur_peau.errors }}
+                        </div>
+                        <div class="col-md-6 fg">
+                            <label for="{{ form.allergies.id_for_label }}">Allergies</label>
+                            {{ form.allergies }}{{ form.allergies.errors }}
+                        </div>
+                        <div class="col-md-6 fg">
+                            <label for="{{ form.maladies_chroniques.id_for_label }}">Maladies chroniques</label>
+                            {{ form.maladies_chroniques }}{{ form.maladies_chroniques.errors }}
+                        </div>
+                        <div class="col-12 fg">
+                            <label for="{{ form.cicatrices.id_for_label }}">Cicatrices et marques</label>
+                            {{ form.cicatrices }}{{ form.cicatrices.errors }}
+                        </div>
+                    </div>
+                    <div class="photos mt-2">
+                        <div class="dropzone">
+                            <label for="{{ form.photo_face.id_for_label }}"><i class="bi bi-camera"></i> Photo de face</label>
+                            {{ form.photo_face }}
+                            <div id="photo-face-preview">
+                                {% if detenu and detenu.photo_face %}
+                                <img src="{{ detenu.photo_face.url }}" class="photo-preview mt-2" alt="">
+                                {% endif %}
+                            </div>
+                            {{ form.photo_face.errors }}
+                        </div>
+                        <div class="dropzone">
+                            <label for="{{ form.photo_profil.id_for_label }}"><i class="bi bi-camera"></i> Photo de profil</label>
+                            {{ form.photo_profil }}
+                            <div id="photo-profil-preview">
+                                {% if detenu and detenu.photo_profil %}
+                                <img src="{{ detenu.photo_profil.url }}" class="photo-preview mt-2" alt="">
+                                {% endif %}
+                            </div>
+                            {{ form.photo_profil.errors }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{ form.empreintes_digitales.as_hidden }}
+            {{ form.adn.as_hidden }}
+            {% if action != 'Modifier' %}
+            {{ form.date_liberation_effective.as_hidden }}
+            {{ form.motif_liberation.as_hidden }}
+            {% endif %}
+
+            <div class="form-actions">
+                <a href="{% url 'detenus_list' %}" class="btn btn-outline-secondary">Annuler</a>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> {{ action }}</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('detenuForm');
+    const dossier = document.getElementById('id_dossier');
+    const dossierName = document.getElementById('dossier-name');
+    if (dossier && dossierName) {
+        dossier.addEventListener('change', function() {
+            dossierName.textContent = this.files[0] ? this.files[0].name : '';
+        });
+    }
+
+    function preview(inputId, previewId) {
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+        if (!input || !preview) return;
+        input.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = '<img src="' + e.target.result + '" class="photo-preview mt-2" alt="">';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    preview('id_photo_face', 'photo-face-preview');
+    preview('id_photo_profil', 'photo-profil-preview');
+
+    const centreField = document.getElementById('id_centre');
+    const sexeField = document.getElementById('id_sexe');
+    const celluleField = document.getElementById('id_cellule');
+    const cellulesUrl = '{% url "api_cellules_centre" %}';
+
+    function reloadCellules() {
+        if (!celluleField || !centreField) return;
+        const centre = centreField.value;
+        const sexe = sexeField ? sexeField.value : '';
+        const current = celluleField.value;
+        if (!centre) {
+            celluleField.innerHTML = '<option value="">— Choisir une cellule —</option>';
+            return;
+        }
+        fetch(cellulesUrl + '?centre=' + encodeURIComponent(centre) + '&sexe=' + encodeURIComponent(sexe), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            let html = '<option value="">— Choisir une cellule —</option>';
+            (data.groups || []).forEach(function(group) {
+                html += '<optgroup label="' + group.pavillon + '">';
+                (group.cellules || []).forEach(function(cell) {
+                    const sel = cell.code === current ? ' selected' : '';
+                    html += '<option value="' + cell.code + '"' + sel + '>' + cell.label + '</option>';
+                });
+                html += '</optgroup>';
+            });
+            if (current && html.indexOf('value="' + current + '"') === -1) {
+                html += '<optgroup label="Autre"><option value="' + current + '" selected>' + current + '</option></optgroup>';
+            }
+            celluleField.innerHTML = html;
+        }).catch(function() {});
+    }
+    if (centreField) centreField.addEventListener('change', reloadCellules);
+    if (sexeField) sexeField.addEventListener('change', reloadCellules);
+
+    form.addEventListener('submit', function(e) {
+        const required = ['matricule','nom','prenom','sexe','date_naissance','lieu_naissance','date_arrestation','date_incarceration','tribunal','regime','statut','motif_incarceration','cellule'];
+        let errors = [];
+        required.forEach(function(name) {
+            const field = form.querySelector('[name="' + name + '"]');
+            if (field && !String(field.value || '').trim()) {
+                field.classList.add('is-invalid');
+                errors.push(name);
+            }
+        });
+        const a = form.querySelector('[name="date_arrestation"]');
+        const i = form.querySelector('[name="date_incarceration"]');
+        if (a && i && a.value && i.value && a.value > i.value) {
+            errors.push('dates');
+        }
+        if (errors.length) {
+            e.preventDefault();
+            alert('Veuillez renseigner les champs obligatoires (onglets Identité, Judiciaire et Détention).');
+        }
+    });
+});
+</script>
+{% endblock %}

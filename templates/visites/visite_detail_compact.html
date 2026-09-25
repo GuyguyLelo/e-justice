@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Visite - {{ visite.visiteur.nom_complet }}{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="fiche">
+    <div class="fiche-toolbar">
+        <h2><i class="bi bi-calendar-event"></i> Détail de la visite</h2>
+        <div class="fiche-actions">
+            <a href="{% url 'visites_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Liste</a>
+            {% if request.user.can_edit_visites %}
+            <a href="{% url 'visite_edit' visite.id %}" class="btn btn-primary"><i class="bi bi-pencil"></i> Modifier</a>
+            {% if visite.statut == 'PROGRAMMEE' %}
+            <button type="button" class="btn btn-success" onclick="actionVisite({{ visite.id }}, 'commencer')"><i class="bi bi-play"></i> Commencer</button>
+            {% elif visite.statut == 'EN_COURS' %}
+            <button type="button" class="btn btn-warning" onclick="actionVisite({{ visite.id }}, 'terminer')"><i class="bi bi-stop"></i> Terminer</button>
+            {% endif %}
+            {% if visite.statut == 'PROGRAMMEE' or visite.statut == 'EN_COURS' %}
+            <button type="button" class="btn btn-outline-danger" onclick="actionVisite({{ visite.id }}, 'annuler')"><i class="bi bi-x"></i> Annuler</button>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    <div class="id-banner">
+        <div class="id-photo">{{ visite.visiteur.nom|first|upper }}{{ visite.visiteur.prenom|first|upper }}</div>
+        <div>
+            <h1>{{ visite.visiteur.nom_complet }} → {{ visite.detenu.nom_complet }}</h1>
+            <p class="id-meta">{{ visite.date_visite|date:"d/m/Y" }} à {{ visite.date_visite|time:"H:i" }} · {{ visite.duree_minutes }} min</p>
+            <p class="id-meta">{{ visite.visiteur.get_type_visiteur_display }} · {{ visite.detenu.matricule }}</p>
+        </div>
+        <div class="id-status">
+            <span class="status-badge">{{ visite.get_statut_display }}</span>
+            <span class="id-meta">{{ visite.detenu.cellule }}</span>
+        </div>
+    </div>
+    <div class="kpi-row cols-4">
+        <div class="kpi"><span>Date</span><strong>{{ visite.date_visite|date:"d/m/Y" }}</strong></div>
+        <div class="kpi"><span>Heure</span><strong>{{ visite.date_visite|time:"H:i" }}</strong></div>
+        <div class="kpi"><span>Durée</span><strong>{{ visite.duree_minutes }} min</strong></div>
+        <div class="kpi"><span>Statut</span><strong>{{ visite.get_statut_display }}</strong></div>
+    </div>
+    <div class="fiche-body">
+        <ul class="nav fiche-tabs">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-infos" type="button">Informations</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-objets" type="button">Objets</button></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab-infos">
+                <div class="dl-grid">
+                    <div class="dl-item"><span>Visiteur</span><strong><a href="{% url 'visiteur_detail' visite.visiteur.id %}">{{ visite.visiteur.nom_complet }}</a></strong></div>
+                    <div class="dl-item"><span>Type</span><strong>{{ visite.visiteur.get_type_visiteur_display }}</strong></div>
+                    <div class="dl-item"><span>Pièce</span><strong>{{ visite.visiteur.piece_identite }} {{ visite.visiteur.numero_piece }}</strong></div>
+                    <div class="dl-item"><span>Tél. visiteur</span><strong>{{ visite.visiteur.telephone|default:"—" }}</strong></div>
+                    <div class="dl-item"><span>Détenu</span><strong><a href="{% url 'detenu_detail' visite.detenu.id %}">{{ visite.detenu.nom_complet }}</a></strong></div>
+                    <div class="dl-item"><span>Matricule</span><strong>{{ visite.detenu.matricule }}</strong></div>
+                    <div class="dl-item"><span>Cellule</span><strong>{{ visite.detenu.cellule }}</strong></div>
+                    <div class="dl-item"><span>Agent</span><strong>{{ visite.agent_controle.get_full_name|default:"—" }}</strong></div>
+                    <div class="dl-item dl-wide"><span>Objets apportés</span><strong>{{ visite.objets_apportes|default:"—" }}</strong></div>
+                    <div class="dl-item dl-wide"><span>Observations</span><strong>{{ visite.observations|default:"—" }}</strong></div>
+                    {% if visite.motif_refus %}
+                    <div class="dl-item dl-wide"><span>Motif de refus</span><strong>{{ visite.motif_refus }}</strong></div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="tab-pane fade" id="tab-objets">
+                {% if objets %}
+                <table class="table data-table">
+                    <thead><tr><th>Objet</th><th>Qté</th><th>Statut</th><th>Motif</th></tr></thead>
+                    <tbody>
+                    {% for objet in objets %}
+                    <tr>
+                        <td>{{ objet.nom_objet }}</td>
+                        <td>{{ objet.quantite }}</td>
+                        <td>{% if objet.autorise %}Autorisé{% else %}Refusé{% endif %}</td>
+                        <td>{{ objet.motif_refus|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}<p class="text-muted mb-0">Aucun objet détaillé.</p>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function actionVisite(visiteId, action) {
+    var token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fetch('/api/visites/' + visiteId + '/action/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': token },
+        body: JSON.stringify({ action: action })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) location.reload();
+        else alert('Erreur: ' + data.message);
+    }).catch(function() { alert('Une erreur est survenue'); });
+}
+</script>
+{% endblock %}

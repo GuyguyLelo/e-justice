@@ -1,0 +1,535 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ detenu.nom_complet }} - e-Detenu{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .detail-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: 1rem 1rem 0 0;
+        padding: 2rem;
+        margin: -2rem -2rem 2rem -2rem;
+    }
+    
+    .detail-section {
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .detail-section h5 {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary-color);
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: var(--primary-color);
+        min-width: 200px;
+    }
+    
+    .info-value {
+        color: #495057;
+        text-align: right;
+        flex: 1;
+    }
+    
+    .status-badge {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        font-weight: 600;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+    
+    .btn-action {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .historique-item {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-left: 4px solid var(--primary-color);
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .historique-item .date {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .historique-item .action {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    
+    .historique-item .description {
+        color: #495057;
+        margin-top: 0.25rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    .stat-card h4 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-card p {
+        margin-bottom: 0;
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête avec informations principales -->
+    <div class="detail-card">
+        <div class="detail-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-2">
+                        <i class="bi bi-person-badge"></i> {{ detenu.nom_complet }}
+                    </h1>
+                    <p class="mb-0">
+                        <i class="bi bi-hash"></i> {{ detenu.matricule }} • 
+                        <i class="bi bi-gender-{{ detenu.sexe|lower }}"></i> {{ detenu.get_sexe_display }} • 
+                        <i class="bi bi-calendar"></i> {{ detenu.age }} ans
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="status-badge 
+                        {% if detenu.statut == 'INCARCERE' %}bg-danger
+                        {% elif detenu.statut == 'LIBERE' %}bg-success
+                        {% elif detenu.statut == 'TRANSFERE' %}bg-warning
+                        {% elif detenu.statut == 'EVADE' %}bg-secondary
+                        {% elif detenu.statut == 'DECEDE' %}bg-dark
+                        {% endif %} text-white">
+                        {{ detenu.get_statut_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistiques rapides -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>{{ detenu.duree_incarceration }}</h4>
+                <p>Jours d'incarcération</p>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                <h4>{{ detenu.get_regime_display }}</h4>
+                <p>Régime</p>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #f39c12, #f1c40f);">
+                <h4>{{ detenu.cellule|default:"Non assigné" }}</h4>
+                <p>Cellule</p>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                <h4>{{ detenu.date_incarceration|date:"d/m/Y" }}</h4>
+                <p>Date d'incarcération</p>
+            </div>
+        </div>
+        
+        <!-- Boutons d'action -->
+        <div class="action-buttons">
+            <a href="{% url 'detenus_list' %}" class="btn btn-outline-secondary btn-action">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+            {% if request.user.can_manage_centre_detenus %}
+            <a href="{% url 'generer_fiche_detenu' detenu.id %}" class="btn btn-outline-info btn-action">
+                <i class="bi bi-file-pdf"></i> Fiche d'identité
+            </a>
+            {% endif %}
+            <a href="{% url 'detenu_edit' detenu.id %}" class="btn btn-outline-primary btn-action">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            {% if detenu.statut == 'INCARCERE' %}
+                <a href="{% url 'detenu_liberation' detenu.id %}" class="btn btn-outline-success btn-action">
+                    <i class="bi bi-unlock"></i> Libérer
+                </a>
+                <a href="{% url 'detenu_transfert' detenu.id %}" class="btn btn-outline-warning btn-action">
+                    <i class="bi bi-arrow-right"></i> Transférer
+                </a>
+            {% endif %}
+            <a href="#" class="btn btn-outline-danger btn-action" onclick="confirmDelete()">
+                <i class="bi bi-trash"></i> Supprimer
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Informations personnelles -->
+        <div class="col-md-6">
+            <div class="detail-section">
+                <h5><i class="bi bi-person"></i> Informations personnelles</h5>
+                <div class="info-row">
+                    <span class="info-label">Nom complet</span>
+                    <span class="info-value">{{ detenu.nom_complet }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Matricule</span>
+                    <span class="info-value">{{ detenu.matricule }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Sexe</span>
+                    <span class="info-value">{{ detenu.get_sexe_display }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date de naissance</span>
+                    <span class="info-value">{{ detenu.date_naissance|date:"d/m/Y" }} ({{ detenu.age }} ans)</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Lieu de naissance</span>
+                    <span class="info-value">{{ detenu.lieu_naissance }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Nationalité</span>
+                    <span class="info-value">{{ detenu.nationalite }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Profession</span>
+                    <span class="info-value">{{ detenu.profession|default:"Non renseigné" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Téléphone</span>
+                    <span class="info-value">{{ detenu.telephone|default:"Non renseigné" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Adresse</span>
+                    <span class="info-value">{{ detenu.adresse|default:"Non renseigné" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informations judiciaires -->
+        <div class="col-md-6">
+            <div class="detail-section">
+                <h5><i class="bi bi-gavel"></i> Informations judiciaires</h5>
+                <div class="info-row">
+                    <span class="info-label">Date d'arrestation</span>
+                    <span class="info-value">{{ detenu.date_arrestation|date:"d/m/Y" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date d'incarcération</span>
+                    <span class="info-value">{{ detenu.date_incarceration|date:"d/m/Y" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tribunal</span>
+                    <span class="info-value">{{ detenu.tribunal }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Numéro de dossier</span>
+                    <span class="info-value">{{ detenu.numero_dossier|default:"Non renseigné" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Dossier</span>
+                    <span class="info-value">
+                        {% if detenu.dossier %}
+                        <a href="{% url 'download_dossier' detenu.id %}">
+                            <i class="bi bi-folder2-open"></i> Télécharger
+                        </a>
+                        {% else %}
+                        Non joint
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Régime</span>
+                    <span class="info-value">{{ detenu.get_regime_display }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Statut</span>
+                    <span class="info-value">
+                        <span class="badge 
+                            {% if detenu.statut == 'INCARCERE' %}bg-danger
+                            {% elif detenu.statut == 'LIBERE' %}bg-success
+                            {% elif detenu.statut == 'TRANSFERE' %}bg-warning
+                            {% elif detenu.statut == 'EVADE' %}bg-secondary
+                            {% elif detenu.statut == 'DECEDE' %}bg-dark
+                            {% endif %}">
+                            {{ detenu.get_statut_display }}
+                        </span>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Motif d'incarcération</span>
+                    <span class="info-value">{{ detenu.motif_incarceration }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Avocat</span>
+                    <span class="info-value">{{ detenu.avocat|default:"Non renseigné" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Téléphone avocat</span>
+                    <span class="info-value">{{ detenu.telephone_avocat|default:"Non renseigné" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Informations pénitentiaires -->
+        <div class="col-md-6">
+            <div class="detail-section">
+                <h5><i class="bi bi-building"></i> Informations pénitentiaires</h5>
+                <div class="info-row">
+                    <span class="info-label">Cellule</span>
+                    <span class="info-value">{{ detenu.cellule|default:"Non assigné" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Durée de peine</span>
+                    <span class="info-value">
+                        {% if detenu.duree_peine_mois %}
+                            {{ detenu.duree_peine_mois }} mois
+                        {% else %}
+                            Non renseigné
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date de libération prévue</span>
+                    <span class="info-value">
+                        {% if detenu.date_liberation_prevue %}
+                            {{ detenu.date_liberation_prevue|date:"d/m/Y" }}
+                        {% else %}
+                            Non renseigné
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date de libération effective</span>
+                    <span class="info-value">
+                        {% if detenu.date_liberation_effective %}
+                            {{ detenu.date_liberation_effective|date:"d/m/Y" }}
+                        {% else %}
+                            Non renseigné
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Motif de libération</span>
+                    <span class="info-value">{{ detenu.motif_liberation|default:"Non renseigné" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informations médicales -->
+        <div class="col-md-6">
+            <div class="detail-section">
+                <h5><i class="bi bi-heart-pulse"></i> Informations médicales</h5>
+                <div class="info-row">
+                    <span class="info-label">Groupe sanguin</span>
+                    <span class="info-value">{{ detenu.groupe_sanguin|default:"Non renseigné" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Allergies</span>
+                    <span class="info-value">{{ detenu.allergies|default:"Aucune" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Maladies chroniques</span>
+                    <span class="info-value">{{ detenu.maladies_chroniques|default:"Aucune" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Données biométriques -->
+        <div class="col-md-6">
+            <div class="detail-section">
+                <h5><i class="bi bi-person-badge-fill"></i> Données biométriques</h5>
+                <div class="info-row">
+                    <span class="info-label">Taille</span>
+                    <span class="info-value">
+                        {% if detenu.taille %}{{ detenu.taille }} cm{% else %}Non renseigné{% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Poids</span>
+                    <span class="info-value">
+                        {% if detenu.poids %}{{ detenu.poids }} kg{% else %}Non renseigné{% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Couleur des yeux</span>
+                    <span class="info-value">{{ detenu.get_couleur_yeux_display|default:"Non renseigné" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Couleur des cheveux</span>
+                    <span class="info-value">{{ detenu.get_couleur_cheveux_display|default:"Non renseigné" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Type de cheveux</span>
+                    <span class="info-value">{{ detenu.get_type_cheveux_display|default:"Non renseigné" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Couleur de peau</span>
+                    <span class="info-value">{{ detenu.get_couleur_peau_display|default:"Non renseigné" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Cicatrices et marques</span>
+                    <span class="info-value">{{ detenu.cicatrices|default:"Aucune" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Photos et données sensibles -->
+        <div class="col-md-6">
+            <div class="detail-section">
+                <h5><i class="bi bi-camera-fill"></i> Photos et données sensibles</h5>
+                <div class="info-row">
+                    <span class="info-label">Photo de face</span>
+                    <span class="info-value">
+                        {% if detenu.photo_face %}
+                            <img src="{{ detenu.photo_face.url }}" alt="Photo de face" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
+                        {% else %}
+                            Non disponible
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Photo de profil</span>
+                    <span class="info-value">
+                        {% if detenu.photo_profil %}
+                            <img src="{{ detenu.photo_profil.url }}" alt="Photo de profil" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
+                        {% else %}
+                            Non disponible
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Empreintes digitales</span>
+                    <span class="info-value">
+                        {% if detenu.empreintes_digitales %}
+                            <span class="badge bg-success">Enregistrées</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Non enregistrées</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Profil ADN</span>
+                    <span class="info-value">
+                        {% if detenu.adn %}
+                            <span class="badge bg-success">Enregistré</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Non enregistré</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Historique -->
+    {% if historique %}
+    <div class="row">
+        <div class="col-12">
+            <div class="detail-section">
+                <h5><i class="bi bi-clock-history"></i> Historique récent</h5>
+                {% for item in historique %}
+                    <div class="historique-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="action">{{ item.get_action_display }}</div>
+                                <div class="description">{{ item.description }}</div>
+                                {% if item.motif %}
+                                    <div class="text-muted"><small>Motif: {{ item.motif }}</small></div>
+                                {% endif %}
+                            </div>
+                            <div class="date">{{ item.date_modification|date:"d/m/Y à H:i" }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Animation des cartes
+    $('.detail-card, .detail-section').each(function(index) {
+        $(this).hide().delay(index * 200).fadeIn(600);
+    });
+    
+    // Confirmation de suppression
+    window.confirmDelete = function() {
+        if (confirm('Êtes-vous sûr de vouloir supprimer ce détenu ? Cette action est irréversible.')) {
+            // Ici vous pouvez ajouter la logique de suppression
+            window.location.href = "{% url 'detenu_delete' detenu.id %}";
+        }
+    };
+    
+    // Actions rapides
+    $('.btn-action').on('click', function(e) {
+        const action = $(this).text().trim();
+        if (action.includes('Libérer') || action.includes('Transférer') || action.includes('Supprimer')) {
+            if (!confirm(`Êtes-vous sûr de vouloir ${action.toLowerCase()} ce détenu ?`)) {
+                e.preventDefault();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

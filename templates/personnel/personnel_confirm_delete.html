@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer le personnel{% endblock %}
+
+{% block content %}
+<div class="fiche">
+    <div class="fiche-toolbar">
+        <h2>Supprimer le personnel</h2>
+        <a href="{% url 'personnel_detail' personnel.id %}" class="btn btn-outline-secondary">Retour</a>
+    </div>
+    <div class="fiche-body">
+        <div class="tab-pane">
+            <p>Cette action est irréversible.</p>
+            <div class="dl-grid cols-3">
+                <div class="dl-item"><span>Nom</span><strong>{{ personnel.nom_complet }}</strong></div>
+                <div class="dl-item"><span>Matricule</span><strong>{{ personnel.matricule }}</strong></div>
+                <div class="dl-item"><span>Type</span><strong>{{ personnel.get_type_personnel_display }}</strong></div>
+            </div>
+            <form method="post" class="mt-3 d-flex gap-2">
+                {% csrf_token %}
+                <a href="{% url 'personnel_detail' personnel.id %}" class="btn btn-outline-secondary" style="border-radius:0;">Annuler</a>
+                <button type="submit" class="btn btn-danger" style="border-radius:0;">Confirmer la suppression</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

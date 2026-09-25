@@ -1,0 +1,264 @@
+{% extends 'visites/base.html' %}
+{% load static %}
+
+{% block page_title %}Détail de la Visite{% endblock %}
+{% block page_subtitle %}{{ visite.visiteur.nom_complet }} → {{ visite.detenu.nom_complet }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'visites_list' %}" class="btn btn-outline-primary me-2">
+    <i class="bi bi-arrow-left"></i> Retour à la liste
+</a>
+<a href="{% url 'visite_edit' visite.id %}" class="btn btn-outline-secondary me-2">
+    <i class="bi bi-pencil"></i> Modifier
+</a>
+{% if visite.statut == 'PROGRAMMEE' %}
+<button class="btn btn-success me-2" onclick="actionVisite({{ visite.id }}, 'commencer')">
+    <i class="bi bi-play"></i> Commencer
+</button>
+{% elif visite.statut == 'EN_COURS' %}
+<button class="btn btn-warning me-2" onclick="actionVisite({{ visite.id }}, 'terminer')">
+    <i class="bi bi-stop"></i> Terminer
+</button>
+{% endif %}
+{% if visite.statut in 'PROGRAMMEE,EN_COURS' %}
+<button class="btn btn-danger" onclick="actionVisite({{ visite.id }}, 'annuler')">
+    <i class="bi bi-x-circle"></i> Annuler
+</button>
+{% endif %}
+{% endblock %}
+
+{% block content_visites %}
+<div class="row">
+    <!-- Informations principales -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Informations de la visite
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Visiteur</h6>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                {{ visite.visiteur.nom|first|upper }}
+                            </div>
+                            <div>
+                                <strong>{{ visite.visiteur.nom_complet }}</strong>
+                                <br>
+                                <span class="badge bg-info">{{ visite.visiteur.get_type_visiteur_display }}</span>
+                                <br>
+                                <small class="text-muted">{{ visite.visiteur.numero_piece }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Détenu</h6>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar-lg bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                {{ visite.detenu.nom|first|upper }}
+                            </div>
+                            <div>
+                                <strong>{{ visite.detenu.nom_complet }}</strong>
+                                <br>
+                                <span class="badge bg-secondary">{{ visite.detenu.matricule }}</span>
+                                <br>
+                                <small class="text-muted">Cellule: {{ visite.detenu.cellule }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Date et heure</h6>
+                        <p class="mb-0">
+                            <i class="bi bi-calendar3"></i> {{ visite.date_visite|date:"d/m/Y" }}
+                            <br>
+                            <i class="bi bi-clock"></i> {{ visite.date_visite|time:"H:i" }}
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Durée</h6>
+                        <p class="mb-0">
+                            <i class="bi bi-hourglass-split"></i> {{ visite.duree_minutes }} minutes
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Statut</h6>
+                        {% if visite.statut == 'PROGRAMMEE' %}
+                            <span class="badge bg-warning fs-6">Programmée</span>
+                        {% elif visite.statut == 'EN_COURS' %}
+                            <span class="badge bg-primary fs-6">En cours</span>
+                        {% elif visite.statut == 'TERMINEE' %}
+                            <span class="badge bg-success fs-6">Terminée</span>
+                        {% elif visite.statut == 'ANNULEE' %}
+                            <span class="badge bg-secondary fs-6">Annulée</span>
+                        {% elif visite.statut == 'REFUSEE' %}
+                            <span class="badge bg-danger fs-6">Refusée</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if visite.motif_refus %}
+                <hr>
+                <div class="alert alert-danger">
+                    <h6><i class="bi bi-exclamation-triangle"></i> Motif de refus</h6>
+                    <p class="mb-0">{{ visite.motif_refus }}</p>
+                </div>
+                {% endif %}
+
+                {% if visite.observations %}
+                <hr>
+                <h6>Observations</h6>
+                <p class="text-muted">{{ visite.observations }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Objets apportés -->
+        {% if objets %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-box"></i> Objets apportés
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Objet</th>
+                                <th>Quantité</th>
+                                <th>Statut</th>
+                                <th>Motif de refus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for objet in objets %}
+                            <tr>
+                                <td>{{ objet.nom_objet }}</td>
+                                <td>{{ objet.quantite }}</td>
+                                <td>
+                                    {% if objet.autorise %}
+                                        <span class="badge bg-success">Autorisé</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Refusé</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if objet.motif_refus %}
+                                        {{ objet.motif_refus }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Informations secondaires -->
+    <div class="col-lg-4">
+        <!-- Contrôle -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-shield-check"></i> Contrôle
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if visite.agent_controle %}
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar-sm bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                        {{ visite.agent_controle.first_name|first|upper }}
+                    </div>
+                    <div>
+                        <strong>{{ visite.agent_controle.get_full_name }}</strong>
+                        <br>
+                        <small class="text-muted">Agent de contrôle</small>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Aucun agent assigné</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Objets textuels -->
+        {% if visite.objets_apportes or visite.objets_autorises or visite.objets_refuses %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-list-ul"></i> Objets (texte)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if visite.objets_apportes %}
+                <h6 class="text-primary">Objets apportés</h6>
+                <p class="text-muted small">{{ visite.objets_apportes }}</p>
+                {% endif %}
+
+                {% if visite.objets_autorises %}
+                <h6 class="text-success">Objets autorisés</h6>
+                <p class="text-muted small">{{ visite.objets_autorises }}</p>
+                {% endif %}
+
+                {% if visite.objets_refuses %}
+                <h6 class="text-danger">Objets refusés</h6>
+                <p class="text-muted small">{{ visite.objets_refuses }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Métadonnées -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info"></i> Informations système
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <small class="text-muted">Créée le</small>
+                        <br>
+                        <strong>{{ visite.created_at|date:"d/m/Y H:i" }}</strong>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Modifiée le</small>
+                        <br>
+                        <strong>{{ visite.updated_at|date:"d/m/Y H:i" }}</strong>
+                    </div>
+                </div>
+                {% if visite.created_by %}
+                <hr>
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                        {{ visite.created_by.first_name|first|upper }}
+                    </div>
+                    <div>
+                        <strong>{{ visite.created_by.get_full_name }}</strong>
+                        <br>
+                        <small class="text-muted">Créé par</small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,488 @@
+{% extends 'base.html' %}
+
+{% block title %}Surveillance{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-3 mb-4 border-bottom">
+        <h1 class="h4">
+            <i class="bi bi-camera-video"></i> Surveillance
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-info" onclick="initializeSystem()">
+                    <i class="bi bi-gear"></i> Initialiser
+                </button>
+                <button type="button" class="btn btn-sm btn-primary" onclick="toggleDetection()">
+                    <i class="bi bi-play" id="toggle-icon"></i> <span id="toggle-text">Démarrer</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Détections</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="detections-count">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-person fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Identifiés</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="identified-count">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Inconnus</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="unknown-count">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-question-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Taux réussite</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="success-rate">0%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-graph-up fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Camera Feed -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Flux en Direct</h6>
+                    <div class="dropdown no-arrow">
+                        <span class="badge bg-success" id="camera-status">Actif</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="position-relative" style="height: 450px; background: #000;">
+                        <video id="webcam" class="w-100 h-100 object-fit-cover" autoplay muted></video>
+                        <canvas id="detection-canvas" class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events: none;"></canvas>
+                        
+                        <!-- Status Overlay -->
+                        <div class="position-absolute top-0 end-0 p-3">
+                            <div id="status-overlay" class="bg-dark bg-opacity-75 text-white px-3 py-2 rounded">
+                                <small>En attente...</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Activité Récente</h6>
+                </div>
+                <div class="card-body">
+                    <div id="activity-log" style="max-height: 400px; overflow-y: auto;">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-camera-video-off fa-2x mb-2"></i>
+                            <p class="mb-0">Aucune activité</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detections Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Détections</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Heure</th>
+                            <th>Caméra</th>
+                            <th>Personne</th>
+                            <th>Confiance</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detections-tbody">
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">Aucune détection</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let webcamStream = null;
+let detectionInterval = null;
+let isDetecting = false;
+let stats = { total: 0, identified: 0, unknown: 0 };
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeWebcam();
+});
+
+function initializeWebcam() {
+    const video = document.getElementById('webcam');
+    
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            webcamStream = stream;
+            video.srcObject = stream;
+            document.getElementById('camera-status').textContent = 'Actif';
+            document.getElementById('camera-status').className = 'badge bg-success';
+        })
+        .catch(err => {
+            console.error("Erreur webcam:", err);
+            document.getElementById('camera-status').textContent = 'Erreur';
+            document.getElementById('camera-status').className = 'badge bg-danger';
+        });
+}
+
+function toggleDetection() {
+    if (!webcamStream) {
+        alert('Webcam non disponible');
+        return;
+    }
+    
+    if (isDetecting) {
+        stopDetection();
+    } else {
+        startDetection();
+    }
+}
+
+function startDetection() {
+    isDetecting = true;
+    document.getElementById('toggle-icon').className = 'bi bi-stop';
+    document.getElementById('toggle-text').textContent = 'Arrêter';
+    document.getElementById('status-overlay').innerHTML = '<small>Détection active</small>';
+    
+    detectionInterval = setInterval(performDetection, 3000);
+}
+
+function stopDetection() {
+    isDetecting = false;
+    document.getElementById('toggle-icon').className = 'bi bi-play';
+    document.getElementById('toggle-text').textContent = 'Démarrer';
+    document.getElementById('status-overlay').innerHTML = '<small>Arrêté</small>';
+    
+    if (detectionInterval) {
+        clearInterval(detectionInterval);
+        detectionInterval = null;
+    }
+}
+
+function performDetection() {
+    const video = document.getElementById('webcam');
+    console.log('Vidéo:', video);
+    console.log('Vidéo width:', video.videoWidth, 'height:', video.videoHeight);
+    
+    if (!video.videoWidth || !video.videoHeight) {
+        console.error('La vidéo n\'est pas initialisée');
+        return;
+    }
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(video.videoWidth, 640);
+    canvas.height = Math.max(video.videoHeight, 480);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    const imageData = canvas.toDataURL('image/jpeg');
+    console.log('Image data length:', imageData.length);
+    
+    fetch('/surveillance/api/detecter-visage/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            image: imageData,
+            camera_id: 1
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            processDetections(data.detections);
+            
+            // Dessiner les rectangles de détection
+            if (data.face_rectangles && data.face_rectangles.length > 0) {
+                drawFaceRectangles(data.face_rectangles);
+            }
+        }
+    })
+    .catch(error => console.error('Erreur:', error));
+}
+
+function processDetections(detections) {
+    if (detections.length === 0) return;
+    
+    detections.forEach(detection => {
+        stats.total++;
+        
+        if (detection.detenu_id) {
+            stats.identified++;
+            addActivity(detection.name, 'identified', detection.confidence);
+        } else {
+            stats.unknown++;
+            addActivity(detection.name, 'unknown', 0);
+        }
+        
+        addDetectionToTable(detection);
+    });
+    
+    updateStats();
+    
+    // Update status
+    const lastDetection = detections[detections.length - 1];
+    if (lastDetection.detenu_id) {
+        document.getElementById('status-overlay').innerHTML = 
+            `<small><i class="bi bi-person-check"></i> ${lastDetection.name}</small>`;
+    } else {
+        document.getElementById('status-overlay').innerHTML = 
+            `<small><i class="bi bi-question-circle"></i> Inconnu</small>`;
+    }
+}
+
+function drawFaceRectangles(faceRectangles) {
+    const video = document.getElementById('webcam');
+    const canvas = document.getElementById('detection-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Synchroniser les dimensions
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Effacer le canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Dessiner les rectangles
+    faceRectangles.forEach(rect => {
+        const color = rect.is_alert ? '#dc3545' : '#28a745';
+        const textColor = rect.is_alert ? '#dc3545' : '#28a745';
+        
+        // Rectangle
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
+        
+        // Fond pour le texte
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(rect.left, rect.top - 25, rect.right - rect.left, 25);
+        
+        // Texte
+        ctx.fillStyle = textColor;
+        ctx.font = '14px Arial';
+        ctx.fillText(`${rect.name} (${rect.confidence}%)`, rect.left + 5, rect.top - 8);
+    });
+}
+
+function initializeSystem() {
+    fetch('/surveillance/api/initialiser-systeme/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Système initialisé: ${data.profils_crees} profils chargés`, 'success');
+            console.log('Détenus chargés:', data.detenus);
+        } else {
+            showNotification('Erreur: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        showNotification('Erreur lors de l\'initialisation', 'danger');
+        console.error('Erreur:', error);
+    });
+}
+
+function addActivity(name, type, confidence) {
+    const log = document.getElementById('activity-log');
+    const time = new Date().toLocaleTimeString();
+    
+    if (log.querySelector('.text-center')) {
+        log.innerHTML = '';
+    }
+    
+    const badgeClass = type === 'identified' ? 'bg-success' : 'bg-warning';
+    const icon = type === 'identified' ? 'person-check' : 'question-circle';
+    
+    const entry = document.createElement('div');
+    entry.className = 'border-bottom pb-2 mb-2';
+    entry.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge ${badgeClass}">
+                    <i class="bi bi-${icon}"></i> ${name}
+                </span>
+                ${confidence > 0 ? `<div class="small text-muted">${confidence.toFixed(1)}%</div>` : ''}
+            </div>
+            <small class="text-muted">${time}</small>
+        </div>
+    `;
+    
+    log.insertBefore(entry, log.firstChild);
+    
+    while (log.children.length > 10) {
+        log.removeChild(log.lastChild);
+    }
+}
+
+function addDetectionToTable(detection) {
+    const tbody = document.getElementById('detections-tbody');
+    
+    if (tbody.querySelector('td[colspan]')) {
+        tbody.innerHTML = '';
+    }
+    
+    const row = document.createElement('tr');
+    
+    // Utiliser le timestamp de l'API si disponible, sinon l'heure actuelle
+    const detectionTime = detection.timestamp ? new Date(detection.timestamp) : new Date();
+    const time = detectionTime.toLocaleTimeString();
+    const date = detectionTime.toLocaleDateString();
+    
+    const badgeClass = detection.detenu_id ? 'bg-success' : 'bg-warning';
+    const statusText = detection.detenu_id ? 'Identifié' : 'Inconnu';
+    const cameraName = detection.camera ? detection.camera.nom : 'Caméra 1';
+    
+    row.innerHTML = `
+        <td>${date}</td>
+        <td>${time}</td>
+        <td>${cameraName}</td>
+        <td>${detection.name}</td>
+        <td>${detection.confidence.toFixed(1)}%</td>
+        <td><span class="badge ${badgeClass}">${statusText}</span></td>
+        <td><button class="btn btn-sm btn-info" onclick="viewDetectionDetails(${detection.detection_id})">
+            <i class="bi bi-eye"></i>
+        </button></td>
+    `;
+    
+    tbody.insertBefore(row, tbody.firstChild);
+    
+    while (tbody.children.length > 20) {
+        tbody.removeChild(tbody.lastChild);
+    }
+}
+
+function updateStats() {
+    document.getElementById('detections-count').textContent = stats.total;
+    document.getElementById('identified-count').textContent = stats.identified;
+    document.getElementById('unknown-count').textContent = stats.unknown;
+}
+
+function viewDetectionDetails(detectionId) {
+    // Afficher les détails de la détection
+    alert(`Détails de la détection #${detectionId}\n\nFonctionnalité à développer:\n- Photo de la détection\n- Coordonnées exactes\n- Historique de la personne\n- Actions possibles`);
+}
+
+function showNotification(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+window.addEventListener('beforeunload', function() {
+    stopDetection();
+    if (webcamStream) {
+        webcamStream.getTracks().forEach(track => track.stop());
+    }
+});
+</script>
+
+<style>
+.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+
+#activity-log::-webkit-scrollbar { width: 6px; }
+#activity-log::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+#activity-log::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+</style>
+{% endblock %}

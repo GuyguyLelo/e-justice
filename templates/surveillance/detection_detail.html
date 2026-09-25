@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Détection #{{ detection.id }} - e-Detenu{% endblock %}
+
+{% block content %}
+<div class="fiche">
+    <div class="fiche-toolbar">
+        <h2><i class="bi bi-eye"></i> Détection #{{ detection.id }}</h2>
+        <div class="fiche-actions">
+            <a href="{% url 'surveillance_detections_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Liste</a>
+            {% if detection.image_detection %}
+            <a href="{{ detection.image_publique_url }}" class="btn btn-outline-primary" target="_blank"><i class="bi bi-download"></i> Image</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="id-banner">
+        {% if detection.image_detection %}
+        <img src="{{ detection.image_publique_url }}" alt="" class="id-photo">
+        {% else %}
+        <div class="id-photo"><i class="bi bi-camera"></i></div>
+        {% endif %}
+        <div>
+            <h1>{% if detection.detenu %}{{ detection.detenu.nom_complet }}{% else %}Visage inconnu{% endif %}</h1>
+            <p class="id-meta">{{ detection.timestamp|date:"d/m/Y" }} à {{ detection.timestamp|time:"H:i:s" }}</p>
+            <p class="id-meta">{{ detection.camera.nom|default:"Caméra non spécifiée" }}</p>
+        </div>
+        <div class="id-status">
+            <span class="status-badge {% if detection.est_alerte %}{% elif detection.detenu %}status-libere{% else %}status-transfere{% endif %}">
+                {% if detection.est_alerte %}Alerte{% elif detection.detenu %}Identifié{% else %}Inconnu{% endif %}
+            </span>
+            <span class="id-meta">{{ detection.confiance|floatformat:1 }} %</span>
+        </div>
+    </div>
+    <div class="kpi-row cols-4">
+        <div class="kpi"><span>Date</span><strong>{{ detection.timestamp|date:"d/m/Y" }}</strong></div>
+        <div class="kpi"><span>Heure</span><strong>{{ detection.timestamp|time:"H:i" }}</strong></div>
+        <div class="kpi"><span>Confiance</span><strong>{{ detection.confiance|floatformat:1 }} %</strong></div>
+        <div class="kpi"><span>Alerte</span><strong>{% if detection.est_alerte %}Oui{% else %}Non{% endif %}</strong></div>
+    </div>
+    <div class="fiche-body">
+        <div class="tab-pane">
+            <div class="dl-grid">
+                <div class="dl-item"><span>Caméra</span><strong>{{ detection.camera.nom|default:"—" }}</strong></div>
+                <div class="dl-item"><span>Détenu</span>
+                    <strong>
+                        {% if detection.detenu %}
+                        <a href="{% url 'detenu_detail' detection.detenu.id %}">{{ detection.detenu.nom_complet }}</a>
+                        {% else %}—{% endif %}
+                    </strong>
+                </div>
+                {% if detection.detenu %}
+                <div class="dl-item"><span>Matricule</span><strong>{{ detection.detenu.matricule }}</strong></div>
+                <div class="dl-item"><span>Centre</span><strong>{{ detection.detenu.centre.nom|default:"—" }}</strong></div>
+                {% endif %}
+                {% if detection.motif_alerte %}
+                <div class="dl-item dl-wide"><span>Motif d'alerte</span><strong>{{ detection.motif_alerte }}</strong></div>
+                {% endif %}
+            </div>
+            {% if detection.image_detection %}
+            <div class="mt-3">
+                <img src="{{ detection.image_publique_url }}" alt="" style="max-height:280px;border:1px solid #d5dee8;">
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

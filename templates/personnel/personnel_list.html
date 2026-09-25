@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Personnel - e-Detenu{% endblock %}
+
+{% block content %}
+<div class="list-wrap">
+    <div class="list-head">
+        <h2><i class="bi bi-people"></i> Liste du personnel</h2>
+        <div class="d-flex gap-1">
+            {% if request.user.can_edit_personnel %}
+            {% if request.user.can_edit_personnel %}
+            <a href="{% url 'personnel_create' %}" class="btn btn-primary"><i class="bi bi-plus"></i> Nouveau</a>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    <div class="stats-strip cols-4">
+        <div class="stat-chip"><strong>{{ total_personnel }}</strong><span>Total</span></div>
+        <div class="stat-chip lib"><strong>{{ nb_actifs }}</strong><span>Actifs</span></div>
+        <div class="stat-chip tr"><strong>{{ nb_conge }}</strong><span>En congé</span></div>
+        <div class="stat-chip ev"><strong>{{ nb_inactifs }}</strong><span>Inactifs</span></div>
+    </div>
+    <form method="get" class="search-bar">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search" value="{{ request.GET.search }}" placeholder="Nom, prénom, matricule…">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="type_personnel">
+                    <option value="">Tous les types</option>
+                    {% for value, label in types_personnel %}
+                    <option value="{{ value }}" {% if request.GET.type_personnel == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="statut">
+                    <option value="">Tous les statuts</option>
+                    {% for value, label in statuts %}
+                    <option value="{{ value }}" {% if request.GET.statut == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary flex-grow-1">Filtrer</button>
+                <a href="{% url 'personnel_list' %}" class="btn btn-outline-secondary">X</a>
+            </div>
+        </div>
+    </form>
+    <div class="data-table-wrap">
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table data-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Personnel</th>
+                        <th>Type</th>
+                        <th>Centre</th>
+                        <th>Statut</th>
+                        <th>Embauche</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for p in page_obj %}
+                    <tr>
+                        <td><span class="photo-sm">{{ p.nom_complet|slice:":1"|upper }}</span></td>
+                        <td>
+                            <div class="name">{{ p.nom_complet }}</div>
+                            <div class="mat">{{ p.matricule }}{% if p.specialite %} · {{ p.specialite }}{% endif %}</div>
+                        </td>
+                        <td>{{ p.get_type_personnel_display }}</td>
+                        <td>{{ p.centre.nom|default:"—" }}</td>
+                        <td>
+                            <span class="status-badge text-white
+                                {% if p.statut == 'ACTIF' %}bg-success
+                                {% elif p.statut == 'CONGE' %}bg-warning
+                                {% elif p.statut == 'SUSPENDU' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">{{ p.get_statut_display }}</span>
+                        </td>
+                        <td>{{ p.date_embauche|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'personnel_detail' p.id %}" class="btn btn-outline-primary btn-action" title="Voir"><i class="bi bi-eye"></i></a>
+                                {% if request.user.can_edit_personnel %}
+                                <a href="{% url 'personnel_edit' p.id %}" class="btn btn-outline-secondary btn-action" title="Modifier"><i class="bi bi-pencil"></i></a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if page_obj.has_other_pages %}
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">‹</a></li>{% endif %}
+                <li class="page-item disabled"><span class="page-link">{{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">›</a></li>{% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">Aucun membre du personnel.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

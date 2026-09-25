@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="fiche">
+    <div class="fiche-toolbar">
+        <h2><i class="bi bi-person-gear"></i> Administrateur de prison</h2>
+        <div class="fiche-actions">
+            <a href="{% url 'admins_prison_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Liste</a>
+            {% if request.user.can_create_admins %}
+            <a href="{% url 'admin_prison_edit' admin.id %}" class="btn btn-primary"><i class="bi bi-pencil"></i> Modifier</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="id-banner">
+        <div class="id-photo">{{ admin.utilisateur.first_name|first|upper }}{{ admin.utilisateur.last_name|first|upper }}</div>
+        <div>
+            <h1>{{ admin.utilisateur.get_full_name|default:admin.utilisateur.username }}</h1>
+            <p class="id-meta">{{ admin.matricule_admin }} · {{ admin.poste }}</p>
+            <p class="id-meta">{{ admin.centre.nom }} ({{ admin.centre.code }})</p>
+        </div>
+        <div class="id-status">
+            <span class="status-badge {% if admin.statut %}status-libere{% else %}status-evade{% endif %}">{% if admin.statut %}Actif{% else %}Inactif{% endif %}</span>
+        </div>
+    </div>
+    <div class="fiche-body">
+        <div class="tab-pane" style="padding:0.85rem;">
+            <div class="dl-grid">
+                <div class="dl-item"><span>Utilisateur</span><strong>{{ admin.utilisateur.username }}</strong></div>
+                <div class="dl-item"><span>Rôle</span><strong>{{ admin.utilisateur.get_role_display }}</strong></div>
+                <div class="dl-item"><span>Email</span><strong>{{ admin.utilisateur.email }}</strong></div>
+                <div class="dl-item"><span>Téléphone</span><strong>{{ admin.utilisateur.telephone|default:"—" }}</strong></div>
+                <div class="dl-item"><span>Poste</span><strong>{{ admin.poste }}</strong></div>
+                <div class="dl-item"><span>Centre</span><strong>{{ admin.centre.nom }}</strong></div>
+                <div class="dl-item"><span>Affectation</span><strong>{{ admin.date_affectation|date:"d/m/Y" }}</strong></div>
+                <div class="dl-item"><span>Créé le</span><strong>{{ admin.created_at|date:"d/m/Y H:i" }}</strong></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

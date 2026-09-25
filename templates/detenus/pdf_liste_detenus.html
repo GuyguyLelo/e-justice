@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Liste des detenus - {{ centre.nom }}</title>
+    <style>
+        @page { size: A4; margin: 1.2cm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #12263a; }
+        h1 { font-size: 15px; text-align: center; margin: 0; color: #004a94; }
+        h2 { font-size: 12px; text-align: center; margin: 4px 0 2px 0; }
+        .sub { text-align: center; font-size: 8px; color: #5b6b7c; margin-bottom: 10px; }
+        table { width: 100%; }
+        th { background-color: #0066c7; color: #fff; font-size: 8px; text-align: left; padding: 4px; }
+        td { border-bottom: 1px solid #d5dee8; padding: 4px; font-size: 9px; }
+        .stat td { text-align: center; border: 1px solid #d5dee8; padding: 6px; }
+        .stat .n { font-size: 14px; font-weight: bold; color: #004a94; }
+        .stat .l { font-size: 8px; color: #5b6b7c; text-transform: uppercase; }
+        .footer { margin-top: 14px; font-size: 8px; color: #5b6b7c; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>LISTE DES DETENUS</h1>
+    <h2>{{ centre.nom }} ({{ centre.code }})</h2>
+    <p class="sub">Genere le {{ date_generation|date:"d/m/Y H:i" }} par {{ admin.utilisateur.get_full_name }}</p>
+
+    <table class="stat">
+        <tr>
+            <td><div class="n">{{ stats.total_detenus }}</div><div class="l">Total</div></td>
+            <td><div class="n">{{ stats.incarceres }}</div><div class="l">Incarceres</div></td>
+            <td><div class="n">{{ stats.liberes }}</div><div class="l">Liberes</div></td>
+            <td><div class="n">{{ stats.transferes }}</div><div class="l">Transferes</div></td>
+            <td><div class="n">{{ stats.evides }}</div><div class="l">Evades</div></td>
+            <td><div class="n">{{ stats.decedes }}</div><div class="l">Decedes</div></td>
+        </tr>
+    </table>
+    <br/>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Matricule</th>
+                <th>Nom</th>
+                <th>Prenom</th>
+                <th>Sexe</th>
+                <th>Incarceration</th>
+                <th>Cellule</th>
+                <th>Statut</th>
+                <th>Liberation prevue</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detenu in detenus %}
+            <tr>
+                <td>{{ detenu.matricule }}</td>
+                <td>{{ detenu.nom }}</td>
+                <td>{{ detenu.prenom }}</td>
+                <td>{{ detenu.get_sexe_display }}</td>
+                <td>{{ detenu.date_incarceration|date:"d/m/Y" }}</td>
+                <td>{{ detenu.cellule }}</td>
+                <td>{{ detenu.get_statut_display }}</td>
+                <td>{{ detenu.date_liberation_prevue|date:"d/m/Y"|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8">Aucun detenu dans ce centre.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        {{ centre.nom }} ({{ centre.code }}) · {{ centre.adresse }} · {{ centre.telephone }}
+    </div>
+</body>
+</html>
