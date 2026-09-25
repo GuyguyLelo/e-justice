@@ -273,6 +273,24 @@
                         </li>
                         {% endif %}
 
+                        {% if user.role == 'ADMIN_CENTRAL' %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-calendar3"></i> Visites
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'suivi_visiteur' %}">
+                                    <i class="bi bi-geo-alt"></i> Suivi visiteur
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'visites_list' %}?date=all">
+                                    <i class="bi bi-list-ul"></i> Liste des visites
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'visiteurs_list' %}">
+                                    <i class="bi bi-people"></i> Visiteurs
+                                </a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
                         {% if user.role == 'ADMIN' or user.role == 'DIRECTEUR' or user.role == 'AGENT' %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">

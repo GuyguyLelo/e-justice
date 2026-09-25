@@ -106,6 +106,10 @@ img.photo-sm { object-fit: cover; padding: 0; }
             {% if centre_filtre %}
             <a href="{% url 'centre_dashboard' centre_filtre.id %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Centre</a>
             {% endif %}
+            {% if request.user.role == 'ADMIN_CENTRAL' %}
+            <a href="{% url 'suivi_visiteur' %}" class="btn btn-outline-secondary">Suivi visiteur</a>
+            <a href="{% url 'visiteurs_list' %}" class="btn btn-outline-secondary">Visiteurs</a>
+            {% endif %}
             {% if request.user.can_edit_visites %}
             <a href="{% url 'visiteurs_list' %}" class="btn btn-outline-secondary">Visiteurs</a>
             <a href="{% url 'visite_create' %}" class="btn btn-primary"><i class="bi bi-plus"></i> Nouvelle</a>

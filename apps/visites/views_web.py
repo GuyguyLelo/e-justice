@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -435,4 +435,180 @@ def api_visite_action(request, visite_id):
         return JsonResponse({'success': True, 'message': 'Visite annulée'})
     
     return JsonResponse({'success': False, 'message': 'Action non reconnue'})
+
+
+SEUIL_RELAIS_JOURS = 7
+_STATUTS_PONT = (
+    StatutVisite.PROGRAMMEE,
+    StatutVisite.EN_COURS,
+    StatutVisite.TERMINEE,
+)
+
+
+def _analyser_pont_communication(visites):
+    """Repère un visiteur susceptible de relier des détenus de prisons différentes (probable pont)."""
+    utiles = [
+        v for v in visites
+        if v.statut in _STATUTS_PONT and v.detenu_id and v.detenu.centre_id
+    ]
+    chrono = sorted(utiles, key=lambda v: v.date_visite)
+    prisons = {v.detenu.centre_id for v in chrono}
+    detenus = {v.detenu_id for v in chrono}
+    est_pont = len(prisons) > 1 and len(detenus) > 1
+    relais = []
+    for i, premiere in enumerate(chrono):
+        for suivante in chrono[i + 1:]:
+            if premiere.detenu_id == suivante.detenu_id:
+                continue
+            if premiere.detenu.centre_id == suivante.detenu.centre_id:
+                continue
+            delta = suivante.date_visite - premiere.date_visite
+            jours = abs(delta.total_seconds()) / 86400
+            relais.append({
+                'de': premiere,
+                'vers': suivante,
+                'jours': jours,
+                'rapide': jours <= SEUIL_RELAIS_JOURS,
+            })
+    relais.sort(key=lambda r: (not r['rapide'], r['jours']))
+    return {
+        'est_pont': est_pont,
+        'relais': relais,
+        'nb_relais_rapides': sum(1 for r in relais if r['rapide']),
+        'seuil_jours': SEUIL_RELAIS_JOURS,
+    }
+
+
+@login_required
+def suivi_visiteur_view(request):
+    """Parcours d'un visiteur dans plusieurs prisons et auprès de plusieurs détenus (admin central)."""
+    if not request.user.is_admin_central():
+        messages.error(request, "Le suivi national des visiteurs est réservé à l'administrateur central.")
+        return redirect('dashboard')
+
+    search = request.GET.get('search', '').strip()
+    centre_id = request.GET.get('centre', '')
+    detenu_id = request.GET.get('detenu', '')
+    parcours = request.GET.get('parcours', '')
+    visiteur_id = request.GET.get('visiteur', '')
+
+    visiteurs = Visiteur.objects.all()
+    if search:
+        visiteurs = visiteurs.filter(
+            Q(nom__icontains=search)
+            | Q(prenom__icontains=search)
+            | Q(numero_piece__icontains=search)
+            | Q(piece_identite__icontains=search)
+        )
+    if centre_id:
+        visiteurs = visiteurs.filter(visites__detenu__centre_id=centre_id)
+    if detenu_id:
+        visiteurs = visiteurs.filter(visites__detenu_id=detenu_id)
+
+    visiteurs = visiteurs.annotate(
+        nb_visites=Count(
+            'visites',
+            filter=Q(visites__statut__in=_STATUTS_PONT),
+            distinct=True,
+        ),
+        nb_prisons=Count(
+            'visites__detenu__centre',
+            filter=Q(visites__statut__in=_STATUTS_PONT),
+            distinct=True,
+        ),
+        nb_detenus=Count(
+            'visites__detenu',
+            filter=Q(visites__statut__in=_STATUTS_PONT),
+            distinct=True,
+        ),
+    ).filter(nb_visites__gt=0)
+
+    if parcours == 'multi_prisons':
+        visiteurs = visiteurs.filter(nb_prisons__gt=1)
+    elif parcours == 'multi_detenus':
+        visiteurs = visiteurs.filter(nb_detenus__gt=1)
+    elif parcours == 'multi':
+        visiteurs = visiteurs.filter(Q(nb_prisons__gt=1) | Q(nb_detenus__gt=1))
+    elif parcours == 'pont':
+        visiteurs = visiteurs.filter(nb_prisons__gt=1, nb_detenus__gt=1)
+
+    visiteurs = visiteurs.order_by('-nb_prisons', '-nb_detenus', 'nom', 'prenom')
+
+    stats_base = Visiteur.objects.annotate(
+        nb_visites=Count(
+            'visites',
+            filter=Q(visites__statut__in=_STATUTS_PONT),
+            distinct=True,
+        ),
+        nb_prisons=Count(
+            'visites__detenu__centre',
+            filter=Q(visites__statut__in=_STATUTS_PONT),
+            distinct=True,
+        ),
+        nb_detenus=Count(
+            'visites__detenu',
+            filter=Q(visites__statut__in=_STATUTS_PONT),
+            distinct=True,
+        ),
+    ).filter(nb_visites__gt=0)
+
+    visiteur_suivi = None
+    visites_parcours = []
+    prisons_parcours = []
+    detenus_parcours = []
+    est_pont = False
+    relais_pont = []
+    nb_relais_rapides = 0
+    seuil_relais_jours = SEUIL_RELAIS_JOURS
+    if visiteur_id:
+        visiteur_suivi = get_object_or_404(Visiteur, pk=visiteur_id)
+        visites_parcours = list(
+            Visite.objects.filter(visiteur=visiteur_suivi)
+            .select_related('detenu', 'detenu__centre')
+            .order_by('-date_visite')
+        )
+        prisons_seen = {}
+        detenus_seen = {}
+        for visite in visites_parcours:
+            centre = visite.detenu.centre
+            if centre.id not in prisons_seen:
+                prisons_seen[centre.id] = centre
+            detenu = visite.detenu
+            if detenu.id not in detenus_seen:
+                detenus_seen[detenu.id] = detenu
+        prisons_parcours = list(prisons_seen.values())
+        detenus_parcours = list(detenus_seen.values())
+        analyse_pont = _analyser_pont_communication(visites_parcours)
+        est_pont = analyse_pont['est_pont']
+        relais_pont = analyse_pont['relais']
+        nb_relais_rapides = analyse_pont['nb_relais_rapides']
+        seuil_relais_jours = analyse_pont['seuil_jours']
+
+    paginator = Paginator(visiteurs, 20)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'page_obj': page_obj,
+        'search': search,
+        'centre_id': centre_id,
+        'detenu_id': detenu_id,
+        'parcours': parcours,
+        'visiteur_id': visiteur_id,
+        'centres': CentrePenitencier.objects.filter(statut=True).order_by('nom'),
+        'detenus': Detenu.objects.select_related('centre').order_by('nom', 'prenom'),
+        'total_visiteurs': stats_base.count(),
+        'nb_multi_prisons': stats_base.filter(nb_prisons__gt=1).count(),
+        'nb_multi_detenus': stats_base.filter(nb_detenus__gt=1).count(),
+        'nb_ponts': stats_base.filter(nb_prisons__gt=1, nb_detenus__gt=1).count(),
+        'nb_filtres': visiteurs.count(),
+        'visiteur_suivi': visiteur_suivi,
+        'visites_parcours': visites_parcours,
+        'prisons_parcours': prisons_parcours,
+        'detenus_parcours': detenus_parcours,
+        'est_pont': est_pont,
+        'relais_pont': relais_pont,
+        'nb_relais_rapides': nb_relais_rapides,
+        'seuil_relais_jours': seuil_relais_jours,
+    }
+    return render(request, 'visites/suivi_visiteur.html', context)
 

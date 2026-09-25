@@ -104,6 +104,7 @@
         .dash-grid { grid-template-columns: 1fr; }
         .dash-prison .id-banner { grid-template-columns: 108px 1fr; }
         .dash-prison .stats-strip.cols-5,
+        .dash-prison .stats-strip.cols-6,
         .stats-strip.cols-3,
         .stats-strip.cols-4 { grid-template-columns: repeat(2, 1fr); }
     }
@@ -151,7 +152,7 @@
     </div>
     {% endif %}
 
-    <div class="stats-strip cols-5">
+    <div class="stats-strip cols-6">
         <a class="stat-chip" href="{% url 'detenus_list' %}">
             <strong><i class="bi bi-people"></i> {{ total_detenus|default:0 }}</strong><span>Détenus</span>
         </a>
@@ -163,6 +164,9 @@
         </a>
         <a class="stat-chip inc" href="{% url 'detenus_list' %}?statut=INCARCERE&sexe=F">
             <strong><i class="bi bi-gender-female"></i> {{ femmes_incarceres|default:0 }}</strong><span>Femmes incarcérées</span>
+        </a>
+        <a class="stat-chip inc" href="{% url 'detenus_list' %}?statut=INCARCERE&mineur=1" title="Détenus de moins de 18 ans">
+            <strong><i class="bi bi-emoji-smile"></i> {{ enfants_incarceres|default:0 }}</strong><span>Enfants incarcérés</span>
         </a>
         <div class="stat-chip {% if taux_occupation > 80 %}inc{% elif taux_occupation > 60 %}tr{% else %}lib{% endif %}">
             <strong><i class="bi bi-pie-chart-fill"></i> {{ taux_occupation|default:0|floatformat:0 }} %</strong><span>Occupation</span>

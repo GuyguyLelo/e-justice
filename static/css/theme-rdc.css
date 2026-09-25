@@ -175,6 +175,7 @@
 .stats-strip.cols-4 { grid-template-columns: repeat(4, 1fr); }
 .stats-strip.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .stats-strip.cols-5 { grid-template-columns: repeat(5, 1fr); }
+.stats-strip.cols-6 { grid-template-columns: repeat(6, 1fr); }
 .stat-chip {
     background: #004a94;
     color: #fff;

@@ -17,6 +17,27 @@ class StatutDetenu(models.TextChoices):
     DECEDE = 'DECEDE', _('Décédé')
 
 
+AGE_MINEUR = 18
+
+
+def date_seuil_mineur(age=AGE_MINEUR):
+    """Date de naissance maximale exclusive pour un mineur (moins de `age` ans)."""
+    from datetime import date
+    today = date.today()
+    try:
+        return today.replace(year=today.year - age)
+    except ValueError:
+        return date(today.year - age, 2, 28)
+
+
+def filtrer_enfants(queryset, incarceres=False):
+    """Détenus de moins de 18 ans, éventuellement seulement les incarcérés."""
+    qs = queryset.filter(date_naissance__gt=date_seuil_mineur())
+    if incarceres:
+        qs = qs.filter(statut=StatutDetenu.INCARCERE)
+    return qs
+
+
 class TypePeine(models.TextChoices):
     """Types de peines"""
     PREVENTIF = 'PREVENTIF', _('Préventif')
@@ -625,6 +646,11 @@ class Detenu(models.Model):
         return today.year - self.date_naissance.year - (
             (today.month, today.day) < (self.date_naissance.month, self.date_naissance.day)
         )
+
+    @property
+    def is_enfant(self):
+        """Mineur de moins de 18 ans."""
+        return self.age < AGE_MINEUR
 
     @property
     def duree_detention(self):

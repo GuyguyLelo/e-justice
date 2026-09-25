@@ -115,12 +115,14 @@ def dashboard_view(request):
         'visites_recentes': [],
         'detenus_recents': [],
         'alertes': 0,
-        'performance': 'N/A'
+        'performance': 'N/A',
+        'enfants': 0,
+        'enfants_incarceres': 0,
     }
     
     # Ajouter des statistiques réelles selon les permissions
     if hasattr(user, 'adminprison'):
-        from apps.detenus.models import Detenu, CentrePenitencier
+        from apps.detenus.models import Detenu, CentrePenitencier, filtrer_enfants
         from apps.personnel.models import Personnel
         from apps.visites.models import Visite
 
@@ -140,6 +142,10 @@ def dashboard_view(request):
         stats['total_femmes'] = Detenu.objects.filter(centre=centre, sexe='F').count()
         stats['hommes_incarceres'] = Detenu.objects.filter(centre=centre, sexe='M', statut='INCARCERE').count()
         stats['femmes_incarceres'] = Detenu.objects.filter(centre=centre, sexe='F', statut='INCARCERE').count()
+        stats['enfants'] = filtrer_enfants(Detenu.objects.filter(centre=centre)).count()
+        stats['enfants_incarceres'] = filtrer_enfants(
+            Detenu.objects.filter(centre=centre), incarceres=True
+        ).count()
 
         personnel_qs = Personnel.objects.filter(centre=centre)
         stats['total_personnel'] = personnel_qs.count()
@@ -170,7 +176,7 @@ def dashboard_view(request):
         stats['taux_occupation'] = centre.taux_occupation
         
     elif user.role in ['ADMIN', 'DIRECTEUR']:
-        from apps.detenus.models import Detenu, CentrePenitencier
+        from apps.detenus.models import Detenu, CentrePenitencier, filtrer_enfants
         from apps.personnel.models import Personnel
         from apps.visites.models import Visite
         from apps.soins.models import Consultation
@@ -188,6 +194,8 @@ def dashboard_view(request):
         stats['total_femmes'] = Detenu.objects.filter(sexe='F').count()
         stats['hommes_incarceres'] = Detenu.objects.filter(sexe='M', statut='INCARCERE').count()
         stats['femmes_incarceres'] = Detenu.objects.filter(sexe='F', statut='INCARCERE').count()
+        stats['enfants'] = filtrer_enfants(Detenu.objects.all()).count()
+        stats['enfants_incarceres'] = filtrer_enfants(Detenu.objects.all(), incarceres=True).count()
         
         # Statistiques des centres
         stats['total_centres'] = CentrePenitencier.objects.count()

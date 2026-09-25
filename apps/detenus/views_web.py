@@ -77,7 +77,7 @@ from django.db.models import Q, Count, Sum, F
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from .models import Detenu, StatutDetenu, TypePeine, CentrePenitencier, AdminPrison, TypeCentre, FicheDetenu
+from .models import Detenu, StatutDetenu, TypePeine, CentrePenitencier, AdminPrison, TypeCentre, FicheDetenu, filtrer_enfants
 from .forms import DetenuForm, LiberationForm, TransfertForm, RechercheDetenuForm, CentreForm, AdminPrisonForm
 
 
@@ -89,6 +89,7 @@ def detenus_list_view(request, centre_id=None):
     statut = request.GET.get('statut', '')
     regime = request.GET.get('regime', '')
     sexe = request.GET.get('sexe', '')
+    mineur = request.GET.get('mineur', '')
     
     # Construire la requête de base selon le rôle de l'utilisateur
     user = request.user
@@ -137,6 +138,9 @@ def detenus_list_view(request, centre_id=None):
     
     if sexe:
         detenus = detenus.filter(sexe=sexe)
+
+    if mineur == '1':
+        detenus = filtrer_enfants(detenus)
     
     # Pagination
     paginator = Paginator(detenus, 20)  # 20 détenus par page
@@ -410,6 +414,8 @@ def detenu_stats_view(request):
         'transferes': Detenu.objects.filter(statut=StatutDetenu.TRANSFERE).count(),
         'evades': Detenu.objects.filter(statut=StatutDetenu.EVADE).count(),
         'decedes': Detenu.objects.filter(statut=StatutDetenu.DECEDE).count(),
+        'enfants': filtrer_enfants(Detenu.objects.all()).count(),
+        'enfants_incarceres': filtrer_enfants(Detenu.objects.all(), incarceres=True).count(),
     }
     
     # Statistiques par régime
@@ -608,6 +614,8 @@ def dashboard_central_view(request):
         'total_femmes': Detenu.objects.filter(sexe='F').count(),
         'hommes_incarceres': Detenu.objects.filter(sexe='M', statut=StatutDetenu.INCARCERE).count(),
         'femmes_incarceres': Detenu.objects.filter(sexe='F', statut=StatutDetenu.INCARCERE).count(),
+        'enfants': filtrer_enfants(Detenu.objects.all()).count(),
+        'enfants_incarceres': filtrer_enfants(Detenu.objects.all(), incarceres=True).count(),
     }
     
     # Capacité totale
@@ -912,6 +920,10 @@ def centre_dashboard_view(request, centre_id):
             'total_femmes': Detenu.objects.filter(centre=centre, sexe='F').count(),
             'hommes_incarceres': Detenu.objects.filter(centre=centre, sexe='M', statut=StatutDetenu.INCARCERE).count(),
             'femmes_incarceres': Detenu.objects.filter(centre=centre, sexe='F', statut=StatutDetenu.INCARCERE).count(),
+            'enfants': filtrer_enfants(Detenu.objects.filter(centre=centre)).count(),
+            'enfants_incarceres': filtrer_enfants(
+                Detenu.objects.filter(centre=centre), incarceres=True
+            ).count(),
         }
         
         # Derniers détenus du centre

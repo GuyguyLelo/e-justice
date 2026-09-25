@@ -104,6 +104,7 @@
         <h2><i class="bi bi-building"></i> Dashboard central — Centres pénitenciers</h2>
         <div class="d-flex gap-2 flex-wrap">
             <a href="{% url 'centres_list' %}" class="btn btn-primary"><i class="bi bi-building"></i> Centres</a>
+            <a href="{% url 'suivi_visiteur' %}" class="btn btn-outline-secondary"><i class="bi bi-geo-alt"></i> Suivi visiteur</a>
             <a href="{% url 'admins_prison_list' %}" class="btn btn-outline-secondary"><i class="bi bi-person-gear"></i> Admins</a>
             {% if request.user.can_create_centres %}
             <a href="{% url 'centre_create' %}" class="btn btn-outline-primary"><i class="bi bi-plus"></i> Nouveau centre</a>
@@ -114,7 +115,7 @@
         </div>
     </div>
 
-    <div class="stats-strip cols-3">
+    <div class="stats-strip cols-4">
         <a class="stat-chip" href="{% url 'centres_list' %}" title="Consulter les centres">
             <strong><i class="bi bi-building"></i> {{ stats.total_centres }}</strong><span>Centres</span>
         </a>
@@ -123,6 +124,9 @@
         </a>
         <a class="stat-chip inc" href="{% url 'detenus_list' %}?statut=INCARCERE" title="Consulter les incarcérés">
             <strong><i class="bi bi-lock-fill"></i> {{ stats.detenus_incarceres }}</strong><span>Incarcérés</span>
+        </a>
+        <a class="stat-chip inc" href="{% url 'detenus_list' %}?statut=INCARCERE&mineur=1" title="Détenus de moins de 18 ans">
+            <strong><i class="bi bi-emoji-smile"></i> {{ stats.enfants_incarceres }}</strong><span>Enfants incarcérés</span>
         </a>
     </div>
     <div class="stats-strip cols-3">

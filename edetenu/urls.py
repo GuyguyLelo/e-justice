@@ -8,7 +8,7 @@ from django.http import JsonResponse
 # Import des vues API
 from apps.surveillance.api_simple import initialiser_systeme_simple, detecter_visage_simple
 from apps.surveillance import views_web
-from apps.detenus.views_web import api_detenu_search, api_detenu_quick_action, biometric_capture_view
+from apps.visites.views_web import suivi_visiteur_view
 from apps.detenus.views_simple import biometric_update_simple
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -113,6 +113,7 @@ urlpatterns = [
     path('api/personnel/', include('apps.personnel.urls')),
     # Visites gérées uniquement via API REST (retirées de l'admin Django)
     path('api/visites/', include('apps.visites.urls')),
+    path('suivi-visiteur/', suivi_visiteur_view, name='suivi_visiteur'),
     path('api/soins/', include('apps.soins.urls')),
     path('api/logistique/', include('apps.logistique.urls')),
     path('api/rapports/', include('apps.rapports.urls')),

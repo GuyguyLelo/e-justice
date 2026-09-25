@@ -1,0 +1,390 @@
+{% extends 'base.html' %}
+
+{% block title %}Suivi visiteur - e-Justice{% endblock %}
+
+{% block extra_css %}
+<style>
+    .list-wrap { padding: 0.65rem 0.9rem 1rem; }
+    .list-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.55rem;
+    }
+    .list-head h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #003366;
+    }
+    .list-head .btn { border-radius: 0; font-size: 0.75rem; padding: 0.28rem 0.65rem; }
+    .stats-strip {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 0.7rem;
+    }
+    .stat-chip {
+        background: #004a94;
+        color: #fff;
+        text-align: center;
+        padding: 0.55rem 0.4rem;
+        border-left: 3px solid #f7d116;
+        text-decoration: none;
+        display: block;
+    }
+    .stat-chip:hover { filter: brightness(1.08); color: #fff; }
+    .stat-chip strong { display: block; font-size: 1.35rem; line-height: 1.15; font-weight: 700; }
+    .stat-chip span { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.9; }
+    .stat-chip.inc { background: #ce1020; }
+    .stat-chip.tr { background: #c9a227; color: #12263a; }
+    .stat-chip.ev { background: #5b6b7c; }
+    .search-bar {
+        background: #fff;
+        border: 1px solid #d5dee8;
+        padding: 0.4rem 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .search-bar .form-control,
+    .search-bar .form-select,
+    .search-bar .btn {
+        border-radius: 0;
+        height: 2rem;
+        font-size: 0.8rem;
+        padding: 0.2rem 0.45rem;
+    }
+    .suivi-grid {
+        display: grid;
+        grid-template-columns: {% if visiteur_suivi %}1.1fr 0.9fr{% else %}1fr{% endif %};
+        gap: 0.6rem;
+        align-items: start;
+    }
+    .detenus-table-wrap { background: #fff; border: 1px solid #d5dee8; }
+    .detenus-table { margin: 0; font-size: 0.8rem; }
+    .detenus-table thead th {
+        background: #0066c7;
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.38rem 0.5rem;
+        white-space: nowrap;
+        border: none;
+    }
+    .detenus-table tbody td {
+        padding: 0.28rem 0.5rem;
+        vertical-align: middle;
+        border-color: #e8eef4;
+    }
+    .detenus-table tbody tr:hover { background: #f4f8fc; }
+    .detenus-table tbody tr.is-active { background: #e8f1fb; }
+    .detenus-table .name { font-weight: 700; color: #003366; }
+    .detenus-table .mat { color: #5b6b7c; font-size: 0.72rem; }
+    .photo-sm {
+        width: 32px; height: 32px;
+        background: #0066c7; color: #fff;
+        font-size: 0.65rem; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center;
+        border: 1px solid #d5dee8;
+    }
+    img.photo-sm { object-fit: cover; padding: 0; }
+    .flag {
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 0.1rem 0.35rem;
+        margin-right: 0.15rem;
+        display: inline-block;
+    }
+    .flag-p { background: #ce1020; color: #fff; }
+    .flag-d { background: #c9a227; color: #12263a; }
+    .flag-pont { background: #7a1020; color: #fff; }
+    .hint-pont {
+        background: #fff8e6;
+        border: 1px solid #e6c84a;
+        border-left: 4px solid #ce1020;
+        padding: 0.45rem 0.65rem;
+        margin-bottom: 0.55rem;
+        font-size: 0.8rem;
+        color: #12263a;
+    }
+    .alerte-pont {
+        background: #fde8ea;
+        border: 1px solid #ce1020;
+        color: #7a1020;
+        padding: 0.5rem 0.6rem;
+        margin-bottom: 0.65rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .relais-table { width: 100%; font-size: 0.75rem; margin-bottom: 0.7rem; }
+    .relais-table th { color: #5b6b7c; font-weight: 600; font-size: 0.65rem; text-transform: uppercase; }
+    .relais-table td { padding: 0.28rem 0.2rem; vertical-align: top; border-bottom: 1px solid #e8eef4; }
+    .relais-rapide { color: #ce1020; font-weight: 700; }
+    .btn-action { padding: 0.12rem 0.32rem; font-size: 0.75rem; border-radius: 0; line-height: 1; }
+    .pagination { justify-content: flex-end; margin: 0.4rem 0.5rem 0.45rem; }
+    .pagination .page-link { border-radius: 0; font-size: 0.75rem; padding: 0.2rem 0.45rem; }
+    .empty-state { text-align: center; padding: 1.5rem; color: #6c757d; }
+    .panel-box { background: #fff; border: 1px solid #d5dee8; }
+    .panel-box h3 {
+        margin: 0;
+        padding: 0.5rem 0.7rem;
+        background: #0066c7;
+        color: #fff;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .panel-body { padding: 0.65rem 0.7rem 0.8rem; }
+    .chip-list { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0 0 0.7rem; }
+    .chip {
+        background: #e8eef4;
+        color: #003366;
+        font-size: 0.72rem;
+        padding: 0.18rem 0.45rem;
+        font-weight: 600;
+    }
+    .timeline { border-left: 3px solid #f7d116; margin: 0.2rem 0 0 0.4rem; padding-left: 0.85rem; }
+    .tl-item { position: relative; margin-bottom: 0.7rem; }
+    .tl-item::before {
+        content: "";
+        position: absolute;
+        left: -1.05rem;
+        top: 0.35rem;
+        width: 8px; height: 8px;
+        background: #0066c7;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px #0066c7;
+    }
+    .tl-date { font-size: 0.72rem; color: #5b6b7c; font-weight: 600; }
+    .tl-title { font-size: 0.86rem; font-weight: 700; color: #003366; margin: 0.05rem 0; }
+    .tl-meta { font-size: 0.75rem; color: #12263a; }
+    .status-badge {
+        font-size: 0.62rem;
+        padding: 0.1rem 0.35rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    @media (max-width: 992px) {
+        .stats-strip { grid-template-columns: repeat(2, 1fr); }
+        .suivi-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="list-wrap">
+    <div class="list-head">
+        <h2><i class="bi bi-geo-alt"></i> Suivi visiteur <span class="text-muted" style="font-size:0.78rem;font-weight:600;">(consultation)</span></h2>
+        <div>
+            <a href="{% url 'visites_list' %}?date=all" class="btn btn-outline-secondary">Visites</a>
+            <a href="{% url 'visiteurs_list' %}" class="btn btn-outline-secondary">Visiteurs</a>
+        </div>
+    </div>
+
+    <div class="hint-pont">
+        Un visiteur est un <strong>probable pont de communication</strong> s’il a visité <strong>au moins deux détenus</strong> dans <strong>au moins deux prisons</strong>.
+        Un relais est jugé rapide s’il y a moins de {{ seuil_relais_jours }} jours entre deux visites vers des détenus de prisons différentes.
+    </div>
+
+    <div class="stats-strip">
+        <a class="stat-chip" href="{% url 'suivi_visiteur' %}">
+            <strong>{{ total_visiteurs }}</strong><span>Visiteurs actifs</span>
+        </a>
+        <a class="stat-chip inc" href="{% url 'suivi_visiteur' %}?parcours=pont">
+            <strong>{{ nb_ponts }}</strong><span>Probables ponts de communication</span>
+        </a>
+        <a class="stat-chip" href="{% url 'suivi_visiteur' %}?parcours=multi_prisons">
+            <strong>{{ nb_multi_prisons }}</strong><span>Plusieurs prisons</span>
+        </a>
+        <a class="stat-chip tr" href="{% url 'suivi_visiteur' %}?parcours=multi_detenus">
+            <strong>{{ nb_multi_detenus }}</strong><span>Plusieurs détenus</span>
+        </a>
+        <div class="stat-chip ev">
+            <strong>{{ nb_filtres }}</strong><span>Résultat filtre</span>
+        </div>
+    </div>
+
+    <form method="get" class="search-bar">
+        {% if visiteur_id %}<input type="hidden" name="visiteur" value="{{ visiteur_id }}">{% endif %}
+        <div class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="search" value="{{ search }}" placeholder="Nom, prénom, n° de pièce…">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="centre">
+                    <option value="">Toutes les prisons</option>
+                    {% for centre in centres %}
+                    <option value="{{ centre.id }}" {% if centre_id == centre.id|stringformat:"s" %}selected{% endif %}>{{ centre.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="detenu">
+                    <option value="">Tous les détenus</option>
+                    {% for detenu in detenus %}
+                    <option value="{{ detenu.id }}" {% if detenu_id == detenu.id|stringformat:"s" %}selected{% endif %}>{{ detenu.nom }} {{ detenu.prenom }} ({{ detenu.matricule }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="parcours">
+                    <option value="" {% if not parcours %}selected{% endif %}>Tout parcours</option>
+                    <option value="pont" {% if parcours == 'pont' %}selected{% endif %}>Probables ponts de communication</option>
+                    <option value="multi" {% if parcours == 'multi' %}selected{% endif %}>Plusieurs prisons ou détenus</option>
+                    <option value="multi_prisons" {% if parcours == 'multi_prisons' %}selected{% endif %}>Plusieurs prisons</option>
+                    <option value="multi_detenus" {% if parcours == 'multi_detenus' %}selected{% endif %}>Plusieurs détenus</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">OK</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="suivi-grid">
+        <div class="detenus-table-wrap">
+            {% if page_obj.object_list %}
+            <div class="table-responsive">
+                <table class="table detenus-table align-middle">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Visiteur</th>
+                            <th>Type</th>
+                            <th>Visites</th>
+                            <th>Prisons</th>
+                            <th>Détenus</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for visiteur in page_obj %}
+                        <tr class="{% if visiteur_id == visiteur.id|stringformat:'s' %}is-active{% endif %}">
+                            <td>{% include 'visites/_photo_visiteur.html' with visiteur=visiteur %}</td>
+                            <td>
+                                <div class="name">{{ visiteur.nom_complet }}</div>
+                                <div class="mat">{{ visiteur.piece_identite }} {{ visiteur.numero_piece }}</div>
+                                {% if visiteur.nb_prisons > 1 and visiteur.nb_detenus > 1 %}<span class="flag flag-pont">Probable pont</span>{% endif %}
+                                {% if visiteur.nb_prisons > 1 %}<span class="flag flag-p">{{ visiteur.nb_prisons }} prisons</span>{% endif %}
+                                {% if visiteur.nb_detenus > 1 %}<span class="flag flag-d">{{ visiteur.nb_detenus }} détenus</span>{% endif %}
+                            </td>
+                            <td>{{ visiteur.get_type_visiteur_display }}</td>
+                            <td>{{ visiteur.nb_visites }}</td>
+                            <td>{{ visiteur.nb_prisons }}</td>
+                            <td>{{ visiteur.nb_detenus }}</td>
+                            <td>
+                                <a class="btn btn-outline-primary btn-action" title="Parcours"
+                                   href="{% url 'suivi_visiteur' %}?visiteur={{ visiteur.id }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if centre_id %}&centre={{ centre_id }}{% endif %}{% if detenu_id %}&detenu={{ detenu_id }}{% endif %}{% if parcours %}&parcours={{ parcours }}{% endif %}">
+                                    <i class="bi bi-signpost-split"></i>
+                                </a>
+                                <a class="btn btn-outline-secondary btn-action" href="{% url 'visiteur_detail' visiteur.id %}" title="Fiche"><i class="bi bi-eye"></i></a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if page_obj.has_other_pages %}
+            <nav>
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search }}&centre={{ centre_id }}&detenu={{ detenu_id }}&parcours={{ parcours }}&visiteur={{ visiteur_id }}">Préc.</a></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search }}&centre={{ centre_id }}&detenu={{ detenu_id }}&parcours={{ parcours }}&visiteur={{ visiteur_id }}">Suiv.</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="empty-state">Aucun visiteur ne correspond à ce filtre.</div>
+            {% endif %}
+        </div>
+
+        {% if visiteur_suivi %}
+        <div class="panel-box">
+            <h3>Parcours — {{ visiteur_suivi.nom_complet }}</h3>
+            <div class="panel-body">
+                <p class="mat mb-2">{{ visiteur_suivi.get_type_visiteur_display }} · {{ visiteur_suivi.piece_identite }} {{ visiteur_suivi.numero_piece }}</p>
+                {% if est_pont %}
+                <div class="alerte-pont">
+                    Probable pont de communication : {{ detenus_parcours|length }} détenu{{ detenus_parcours|length|pluralize }} dans {{ prisons_parcours|length }} prison{{ prisons_parcours|length|pluralize }}.
+                    {% if nb_relais_rapides %} {{ nb_relais_rapides }} relais en moins de {{ seuil_relais_jours }} jours.{% endif %}
+                </div>
+                {% endif %}
+                {% if relais_pont %}
+                <p class="mat mb-1">Liaisons entre détenus de prisons différentes</p>
+                <table class="relais-table">
+                    <thead>
+                        <tr>
+                            <th>De</th>
+                            <th></th>
+                            <th>Vers</th>
+                            <th>Délai</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for relais in relais_pont %}
+                        <tr>
+                            <td>
+                                <strong>{{ relais.de.detenu.nom }} {{ relais.de.detenu.prenom }}</strong><br>
+                                {{ relais.de.detenu.centre.nom }}<br>
+                                {{ relais.de.date_visite|date:"d/m/Y" }}
+                            </td>
+                            <td>→</td>
+                            <td>
+                                <strong>{{ relais.vers.detenu.nom }} {{ relais.vers.detenu.prenom }}</strong><br>
+                                {{ relais.vers.detenu.centre.nom }}<br>
+                                {{ relais.vers.date_visite|date:"d/m/Y" }}
+                            </td>
+                            <td class="{% if relais.rapide %}relais-rapide{% endif %}">
+                                {% if relais.jours < 1 %}&lt; 1 j.{% else %}{{ relais.jours|floatformat:0 }} j.{% endif %}
+                                {% if relais.rapide %}<br>rapide{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% elif visiteur_suivi and not est_pont %}
+                <p class="mat mb-2">Pas de probable pont de communication : ce visiteur ne relie pas plusieurs détenus de prisons différentes.</p>
+                {% endif %}
+                <div class="chip-list">
+                    {% for centre in prisons_parcours %}
+                    <span class="chip"><i class="bi bi-building"></i> {{ centre.nom }}</span>
+                    {% endfor %}
+                </div>
+                <p class="mat mb-1">Détenus visités</p>
+                <div class="chip-list">
+                    {% for detenu in detenus_parcours %}
+                    <a class="chip" href="{% url 'detenu_detail' detenu.id %}">{{ detenu.nom }} {{ detenu.prenom }} <span class="text-muted">{{ detenu.matricule }}</span></a>
+                    {% endfor %}
+                </div>
+                {% if visites_parcours %}
+                <div class="timeline">
+                    {% for visite in visites_parcours %}
+                    <div class="tl-item">
+                        <div class="tl-date">{{ visite.date_visite|date:"d/m/Y H:i" }} · {{ visite.duree_minutes }} min
+                            <span class="status-badge bg-secondary text-white">{{ visite.get_statut_display }}</span>
+                        </div>
+                        <div class="tl-title">{{ visite.detenu.nom }} {{ visite.detenu.prenom }}</div>
+                        <div class="tl-meta">{{ visite.detenu.centre.nom }} · {{ visite.detenu.matricule }}
+                            <a href="{% url 'visite_detail' visite.id %}">détail</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="empty-state mb-0">Aucune visite enregistrée.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

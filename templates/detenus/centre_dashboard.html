@@ -127,12 +127,15 @@
         </div>
     </div>
 
-    <div class="stats-strip cols-3">
+    <div class="stats-strip cols-4">
         <a class="stat-chip" href="{% url 'centre_detenus_list' centre.id %}" title="Détenus du centre">
             <strong><i class="bi bi-people"></i> {{ stats.total_detenus }}</strong><span>Détenus</span>
         </a>
         <a class="stat-chip inc" href="{% url 'centre_detenus_list' centre.id %}?statut=INCARCERE" title="Incarcérés">
             <strong><i class="bi bi-lock-fill"></i> {{ stats.detenus_incarceres }}</strong><span>Incarcérés</span>
+        </a>
+        <a class="stat-chip inc" href="{% url 'centre_detenus_list' centre.id %}?statut=INCARCERE&mineur=1" title="Détenus de moins de 18 ans">
+            <strong><i class="bi bi-emoji-smile"></i> {{ stats.enfants_incarceres }}</strong><span>Enfants incarcérés</span>
         </a>
         <a class="stat-chip" href="{% url 'centre_detenus_list' centre.id %}">
             <strong><i class="bi bi-pie-chart-fill"></i> {{ stats.taux_occupation|floatformat:0 }} %</strong><span>Occupation</span>

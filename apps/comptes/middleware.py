@@ -110,6 +110,7 @@ class RoleBasedRedirectMiddleware:
             request.path.startswith('/api/personnel/web/') or
             request.path.startswith('/detenus/') or
             request.path.startswith('/visites/') or
+            request.path.startswith('/suivi-visiteur/') or
             request.path.startswith('/personnel/') or
             request.path.startswith('/visiteurs/') or
             request.path.startswith('/surveillance/')):
@@ -124,7 +125,8 @@ class RoleBasedRedirectMiddleware:
                     not request.path.startswith('/api/detenus/web/centres/') and
                     not request.path.startswith('/api/detenus/web/admins-prison/') and
                     not request.path.startswith('/centres/') and
-                    not request.path.startswith('/admins-prison/')):
+                    not request.path.startswith('/admins-prison/') and
+                    not request.path.startswith('/suivi-visiteur/')):
                     return redirect('/api/detenus/web/dashboard-central/')
             
             # Rediriger les admins de centre vers le dashboard général

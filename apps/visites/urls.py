@@ -5,7 +5,7 @@ from .views_web import (
     visiteurs_list_view, visiteur_detail_view, visiteur_create_view, 
     visiteur_edit_view, visites_list_view, visite_detail_view, 
     visite_create_view, visite_edit_view, visite_delete_view,
-    api_visiteur_search, api_visite_action
+    api_visiteur_search, api_visite_action,
 )
 
 router = DefaultRouter()
