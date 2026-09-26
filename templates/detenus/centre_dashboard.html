@@ -27,7 +27,10 @@
         margin: 0.35rem 0 0.15rem;
     }
     .cap-bar > span { display: block; height: 100%; background: #0066c7; }
-    .cap-bar.high > span { background: #ce1020; }
+    .stat-chip.inc { background: #003366; }
+    .status-libere { background: #1b7a3d; color: #fff; }
+    .status-evade { background: #5b6b7c; color: #fff; }
+    .cap-bar.high > span { background: #c9a227; }
     .cap-bar.mid > span { background: #c9a227; }
     a.stat-chip,
     a.stat-chip:link,
@@ -226,7 +229,7 @@
                         </td>
                         <td>
                             <span class="status-badge text-white
-                                {% if detenu.statut == 'INCARCERE' %}bg-danger
+                                {% if detenu.statut == 'INCARCERE' %}bg-primary
                                 {% elif detenu.statut == 'LIBERE' %}bg-success
                                 {% elif detenu.statut == 'TRANSFERE' %}bg-warning
                                 {% else %}bg-secondary{% endif %}">{{ detenu.get_statut_display }}</span>

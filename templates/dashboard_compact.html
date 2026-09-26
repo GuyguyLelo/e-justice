@@ -42,8 +42,9 @@
     a.stat-chip.tr span,
     a.stat-chip.tr i { color: #12263a; }
     a.stat-chip:hover { filter: brightness(1.1); color: #fff; }
+    .dash-prison .stat-chip.inc { background: #003366; }
     .status-libere { background: #1b7a3d; color: #fff; }
-    .status-evade { background: #ce1020; color: #fff; }
+    .status-evade { background: #5b6b7c; color: #fff; }
     .dash-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -81,7 +82,7 @@
         margin: 0.5rem 0 0.25rem;
     }
     .cap-bar > span { display: block; height: 100%; background: #0066c7; }
-    .cap-bar.high > span { background: #ce1020; }
+    .cap-bar.high > span { background: #c9a227; }
     .cap-bar.mid > span { background: #c9a227; }
     .dash-prison .id-banner {
         padding: 0.95rem 1.1rem;
@@ -168,7 +169,7 @@
         <a class="stat-chip inc" href="{% url 'detenus_list' %}?statut=INCARCERE&mineur=1" title="Détenus de moins de 18 ans">
             <strong><i class="bi bi-emoji-smile"></i> {{ enfants_incarceres|default:0 }}</strong><span>Enfants incarcérés</span>
         </a>
-        <div class="stat-chip {% if taux_occupation > 80 %}inc{% elif taux_occupation > 60 %}tr{% else %}lib{% endif %}">
+        <div class="stat-chip {% if taux_occupation > 60 %}tr{% else %}lib{% endif %}">
             <strong><i class="bi bi-pie-chart-fill"></i> {{ taux_occupation|default:0|floatformat:0 }} %</strong><span>Occupation</span>
         </div>
     </div>
@@ -248,7 +249,7 @@
                                 {% elif visite.statut == 'EN_COURS' %}bg-primary
                                 {% elif visite.statut == 'TERMINEE' %}bg-success
                                 {% elif visite.statut == 'ANNULEE' %}bg-secondary
-                                {% elif visite.statut == 'REFUSEE' %}bg-danger
+                                {% elif visite.statut == 'REFUSEE' %}bg-secondary
                                 {% endif %}">{{ visite.get_statut_display }}</span>
                         </td>
                     </tr>
@@ -275,7 +276,7 @@
                         </td>
                         <td>
                             <span class="status-badge text-white
-                                {% if detenu.statut == 'INCARCERE' %}bg-danger
+                                {% if detenu.statut == 'INCARCERE' %}bg-primary
                                 {% elif detenu.statut == 'LIBERE' %}bg-success
                                 {% elif detenu.statut == 'TRANSFERE' %}bg-warning
                                 {% else %}bg-secondary{% endif %}">{{ detenu.get_statut_display }}</span>

@@ -55,7 +55,8 @@
         margin: 0.5rem 0 0.25rem;
     }
     .cap-bar > span { display: block; height: 100%; background: #0066c7; }
-    .cap-bar.high > span { background: #ce1020; }
+    .dash-central .stat-chip.inc { background: #003366; }
+    .cap-bar.high > span { background: #c9a227; }
     .cap-bar.mid > span { background: #c9a227; }
     .chart-wrap { position: relative; height: 240px; padding: 0.45rem 0.55rem 0.55rem; }
     .dash-central .stats-strip {
@@ -136,7 +137,7 @@
         <a class="stat-chip inc" href="{% url 'detenus_list' %}?statut=INCARCERE&sexe=F" title="Consulter les femmes incarcérées">
             <strong><i class="bi bi-gender-female"></i> {{ stats.femmes_incarceres }}</strong><span>Femmes incarcérées</span>
         </a>
-        <a class="stat-chip {% if stats.taux_occupation_global > 80 %}inc{% elif stats.taux_occupation_global > 60 %}tr{% else %}lib{% endif %}" href="{% url 'centres_list' %}" title="Consulter l'occupation des centres">
+        <a class="stat-chip {% if stats.taux_occupation_global > 60 %}tr{% else %}lib{% endif %}" href="{% url 'centres_list' %}" title="Consulter l'occupation des centres">
             <strong><i class="bi bi-pie-chart-fill"></i> {{ stats.taux_occupation_global|floatformat:0 }} %</strong><span>Occupation</span>
         </a>
     </div>
@@ -255,7 +256,7 @@
                     </td>
                     <td>
                         <span class="status-badge text-white
-                            {% if detenu.statut == 'INCARCERE' %}bg-danger
+                            {% if detenu.statut == 'INCARCERE' %}bg-primary
                             {% elif detenu.statut == 'LIBERE' %}bg-success
                             {% elif detenu.statut == 'TRANSFERE' %}bg-warning
                             {% else %}bg-secondary{% endif %}">{{ detenu.get_statut_display }}</span>
@@ -299,7 +300,7 @@
                 labels: data.sexe.labels,
                 datasets: [{
                     data: data.sexe.values,
-                    backgroundColor: ['#0066c7', '#ce1020'],
+                    backgroundColor: ['#0066c7', '#c9a227'],
                     borderColor: '#ffffff',
                     borderWidth: 2
                 }]
